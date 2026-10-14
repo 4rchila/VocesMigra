@@ -1,0 +1,47 @@
+{% load i18n %}
+<div class="form-group">
+  <label class="form-label" for="{{ id }}">
+    {{ label }}
+    {% if required %}<span aria-hidden="true">*</span><span class="visually-hidden">{% trans " (obligatorio)" %}</span>{% endif %}
+  </label>
+  {% if type == "textarea" %}
+  <textarea
+    class="form-control{% if error %} form-control--error{% endif %}"
+    id="{{ id }}"
+    name="{{ name|default:id }}"
+    rows="{{ rows|default:'5' }}"
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if required %}required{% endif %}
+    {% if error %}aria-invalid="true" aria-describedby="{{ id }}_error"{% elif help_text %}aria-describedby="{{ id }}_help"{% endif %}
+  >{{ value|default:"" }}</textarea>
+  {% elif type == "select" %}
+  <select
+    class="form-control{% if error %} form-control--error{% endif %}"
+    id="{{ id }}"
+    name="{{ name|default:id }}"
+    {% if required %}required{% endif %}
+    {% if error %}aria-invalid="true" aria-describedby="{{ id }}_error"{% elif help_text %}aria-describedby="{{ id }}_help"{% endif %}
+  >
+    {% for option_value, option_label in options %}
+    <option value="{{ option_value }}" {% if option_value == value %}selected{% endif %}>{{ option_label }}</option>
+    {% endfor %}
+  </select>
+  {% else %}
+  <input
+    class="form-control{% if error %} form-control--error{% endif %}"
+    id="{{ id }}"
+    name="{{ name|default:id }}"
+    type="{{ type|default:'text' }}"
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if value %}value="{{ value }}"{% endif %}
+    {% if required %}required{% endif %}
+    {% if error %}aria-invalid="true" aria-describedby="{{ id }}_error"{% elif help_text %}aria-describedby="{{ id }}_help"{% endif %}
+  >
+  {% endif %}
+  {% if help_text %}
+  <p class="form-help" id="{{ id }}_help">{{ help_text }}</p>
+  {% endif %}
+  {% if error %}
+  <p class="form-error" id="{{ id }}_error">{{ error }}</p>
+  {% endif %}
+</div>

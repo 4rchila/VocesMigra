@@ -1,0 +1,26 @@
+<article class="card">
+  <header class="card__header">
+    <h2 class="card__title">
+      <a class="card__title-link" href="{{ card_url|default:'#' }}">{{ title }}</a>
+    </h2>
+    {% if category %}
+    <span class="card__category">{{ category }}</span>
+    {% endif %}
+  </header>
+  {% if excerpt %}
+  <p class="card__excerpt">{{ excerpt }}</p>
+  {% endif %}
+  {% if author or date %}
+  <p class="card__meta">
+    {% if author %}<span class="card__meta-item">{{ author }}</span>{% endif %}
+    {% if date %}<time class="card__meta-item" datetime="{{ date_iso|default:date }}">{{ date }}</time>{% endif %}
+  </p>
+  {% elif meta %}
+  <p class="card__meta">{{ meta }}</p>
+  {% endif %}
+  {% if card_url and action_label %}
+  <footer class="card__footer">
+    <a class="button button--small button--secondary" href="{{ card_url }}">{{ action_label }}</a>
+  </footer>
+  {% endif %}
+</article>

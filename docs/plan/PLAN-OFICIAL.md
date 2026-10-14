@@ -1,0 +1,77 @@
+# Plan oficial de desarrollo: Voces Migra
+
+Objetivo: llevar la base del MVP a una aplicación desplegada, segura y presentable en la universidad.
+
+## Roles
+
+- **German**: decide producto, aprueba cada fase, hace o autoriza commits y push.
+- **SHOGUN**: coordina, asigna tareas y consolida resultados.
+- **FORGE**: implementa código, pruebas y documentación técnica.
+- **VERITY**: revisa cada entrega contra sus criterios (cumple, cumple con observaciones o no cumple).
+- **SENTINEL**: audita seguridad y privacidad en las tareas marcadas.
+
+## Flujo por tarea
+
+1. SHOGUN asigna la tarea con criterios.
+2. FORGE trabaja en una rama `feat/<tarea>` y entrega con la suite verde y la CI verde.
+3. VERITY revisa y, cuando la tarea lo indica, SENTINEL audita.
+4. German aprueba y se integra a `main` por pull request. Nadie hace push sin el OK de German.
+
+## Decisiones de German (13 oct 2026)
+
+| # | Decisión | Resultado |
+| --- | --- | --- |
+| D1 | Categorías | Se mantienen las cinco de `PRODUCT.md`; no se agrega "consultas" |
+| D2 | Imágenes | Máximo 5 MB, redimensionadas a 1600 px por lado como máximo y guardadas en WebP sin metadatos |
+| D3 | Comentarios previos | No existen; se implementan desde cero en la Fase 2 |
+| D4 | Bloqueantes de seguridad | Van en la Fase 1, antes de la moderación |
+| D5 | Hosting y correo | Pendiente: FORGE propone opciones gratuitas |
+| D6 | Licencia | MIT |
+
+## Fase 0: base oficial (hecha, en revisión)
+
+- [FORGE] Traslado del MVP sin la capa de agentes, con README, LICENSE, `.gitignore` y CI.
+- [VERITY] Revisión del traslado. [SENTINEL] Auditoría del árbol y la CI.
+- Criterios: 188 pruebas pasan, `check --deploy` sin avisos con valores sintéticos, sin migraciones pendientes, ningún secreto ni dato real en el árbol.
+
+## Fase 1: seguridad base y operación
+
+| Tarea | Responsable | Revisión | Criterio verificable |
+| --- | --- | --- | --- |
+| 1.1 Límite de intentos en login y registro | FORGE | SENTINEL | Prueba: el intento N+1 en la ventana devuelve bloqueo; el éxito no revela si la cuenta existe |
+| 1.2 Registro sin enumeración de correos | FORGE | SENTINEL | Prueba: misma respuesta y mismo código para correo nuevo y existente; el aviso llega solo al dueño |
+| 1.3 Admin en ruta configurable con 2FA (`django-otp`) | FORGE | SENTINEL | `/admin/` devuelve 404; sin OTP no se entra al panel |
+| 1.4 `/health/` con comprobación de base de datos | FORGE | VERITY | Prueba: devuelve 503 si la base falla |
+| 1.5 Cabeceras CSP, Referrer-Policy, `CSRF_TRUSTED_ORIGINS`, `SECURE_PROXY_SSL_HEADER` | FORGE | SENTINEL | Pruebas de cabeceras en respuestas de producción |
+| 1.6 SMTP con 587/TLS por defecto y `verify-full` documentado | FORGE | SENTINEL | Prueba de settings |
+| 1.7 `LOGGING` sin correos ni IP completas | FORGE | SENTINEL | Prueba: un login fallido no deja el correo en el log |
+| 1.8 `region` como lista cerrada | FORGE | VERITY | Un valor fuera de lista se rechaza |
+
+## Fase 2: publicaciones e interacciones 
+
+- [FORGE] Categorías finales, imagen opcional con Pillow sin metadatos, comentarios sin hilos, votos y guardados únicos.
+- [VERITY] Totales de votos, acceso horizontal y archivos inválidos. [SENTINEL] Carga de imágenes.
+- Criterios: los de la Fase 2 de `MVP-ROADMAP.md` con D1 a D3 aplicadas.
+
+## Fase 3: feed, búsqueda y notificaciones
+
+- [FORGE] Orden reciente y por relevancia, búsqueda, filtros y notificaciones internas.
+- [VERITY] Pruebas deterministas de orden y ausencia de N+1. [SENTINEL] Aislamiento de notificaciones.
+- Criterios: los de la Fase 3 del roadmap.
+
+## Fase 4: reportes y moderación
+
+- [FORGE] Reportes, flujo de moderación con trazabilidad, ocultar en lugar de borrar, accesibilidad a 360 px y por teclado, páginas de error.
+- [VERITY] Recorrido completo de reporte. [SENTINEL] Permisos de moderador.
+- Criterios: los de la Fase 4 del roadmap.
+
+## Fase 5: despliegue y presentación (depende de D5)
+
+- [FORGE] Despliegue en el host elegido con PostgreSQL de Supabase, correo real, `collectstatic`, migraciones y respaldo probado.
+- [SENTINEL] Auditoría del entorno publicado. [VERITY] Recorrido sintético de registro a resolución de reporte en el entorno publicado.
+- [FORGE + SHOGUN] Material de presentación: README final, diagrama de arquitectura y guion de demo con datos sintéticos.
+- Criterios: URL pública con HTTPS, `/health/` en 200 con base de datos, CI verde en `main`, respaldo restaurado una vez, ningún dato real.
+
+## Fuera de alcance para la presentación
+
+Mensajería privada, contacto público, recomendaciones algorítmicas y app móvil.

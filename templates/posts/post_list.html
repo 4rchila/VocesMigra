@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Publicaciones" %} — Voces Migra{% endblock %}
+
+{% block content %}
+<section class="section-header" aria-labelledby="feed-title">
+  <div class="container">
+    <h1 id="feed-title">{% trans "Publicaciones" %}</h1>
+    <a class="button button--primary" href="{% url 'posts:create' %}">{% trans "Crear una publicación" %}</a>
+  </div>
+</section>
+
+<section class="categories-section" aria-labelledby="categories-title">
+  <div class="container">
+    <h2 id="categories-title" class="visually-hidden">{% trans "Filtrar por categoría" %}</h2>
+    {% include "components/category_nav.html" %}
+  </div>
+</section>
+
+<section aria-labelledby="results-title">
+  <div class="container">
+    <h2 id="results-title" class="visually-hidden">{% trans "Resultados" %}</h2>
+    {% if page_obj.object_list %}
+      <ul class="card-list" role="list">
+        {% for post in page_obj.object_list %}
+        <li class="card-list__item">
+          {% url 'posts:detail' post.public_id as post_url %}
+          {% include "components/card.html" with title=post.title category=post.get_category_display author=post.author date=post.created_at|date:"j M Y" card_url=post_url action_label="Leer más" %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% include "components/pagination.html" %}
+    {% elif posts %}
+      <ul class="card-list" role="list">
+        {% for post in posts %}
+        <li class="card-list__item">
+          {% url 'posts:detail' post.public_id as post_url %}
+          {% include "components/card.html" with title=post.title category=post.get_category_display author=post.author date=post.created_at|date:"j M Y" card_url=post_url action_label="Leer más" %}
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% url 'posts:create' as create_url %}
+      {% include "components/empty_state.html" with title="No hay publicaciones" description="Aún no hay publicaciones en esta sección. Puedes crear la primera con información útil para la comunidad." action_url=create_url action_label="Crear una publicación" %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

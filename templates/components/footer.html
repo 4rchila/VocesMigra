@@ -1,0 +1,15 @@
+{% load i18n %}
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p class="site-footer__brand">Voces Migra</p>
+    <nav aria-label="{% trans 'Enlaces institucionales' %}">
+      <ul class="site-footer__links" role="list">
+        <li><a href="{% url 'core:home' %}">{% trans "Inicio" %}</a></li>
+        <li><a href="{% url 'posts:list' %}">{% trans "Publicaciones" %}</a></li>
+        <li><a href="/privacidad/">{% trans "Privacidad" %}</a></li>
+        <li><a href="/terminos/">{% trans "Términos" %}</a></li>
+      </ul>
+    </nav>
+    <p class="site-footer__notice">{% trans "Participa con respeto y protege tus datos personales. La información compartida por la comunidad no sustituye asesoría legal ni atención de emergencia." %}</p>
+  </div>
+</footer>

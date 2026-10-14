@@ -1,0 +1,33 @@
+{% load i18n %}
+<nav class="category-nav" aria-label="{% trans 'Categorías' %}">
+  <ul class="category-list" role="list">
+    <li class="category-list__item">
+      <a class="category-link{% if not selected_category %} is-active{% endif %}" href="{% url 'posts:list' %}" {% if not selected_category %}aria-current="true"{% endif %}>{% trans "Todas" %}</a>
+    </li>
+    {% if categories %}
+      {% for category in categories %}
+      <li class="category-list__item">
+        <a class="category-link{% if selected_category == category.0 %} is-active{% endif %}" href="{% url 'posts:list' %}?categoria={{ category.0 }}" {% if selected_category == category.0 %}aria-current="true"{% endif %}>
+          {{ category.1 }}
+        </a>
+      </li>
+      {% endfor %}
+    {% else %}
+      <li class="category-list__item">
+        <a class="category-link" href="{% url 'posts:list' %}?categoria=experiences">{% trans "Vivencias" %}</a>
+      </li>
+      <li class="category-list__item">
+        <a class="category-link" href="{% url 'posts:list' %}?categoria=problems">{% trans "Problemas" %}</a>
+      </li>
+      <li class="category-list__item">
+        <a class="category-link" href="{% url 'posts:list' %}?categoria=help">{% trans "Ayudas" %}</a>
+      </li>
+      <li class="category-list__item">
+        <a class="category-link" href="{% url 'posts:list' %}?categoria=opinions">{% trans "Opiniones" %}</a>
+      </li>
+      <li class="category-list__item">
+        <a class="category-link" href="{% url 'posts:list' %}?categoria=community">{% trans "Comunidad" %}</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
