@@ -25,7 +25,7 @@ Objetivo: llevar la base del MVP a una aplicación desplegada, segura y presenta
 | D2 | Imágenes | Máximo 5 MB, redimensionadas a 1600 px por lado como máximo y guardadas en WebP sin metadatos |
 | D3 | Comentarios previos | No existen; se implementan desde cero en la Fase 2 |
 | D4 | Bloqueantes de seguridad | Van en la Fase 1, antes de la moderación |
-| D5 | Hosting y correo | Pendiente: FORGE propone opciones gratuitas |
+| D5 | Hosting y correo | Propuesta: Render Free (app), Supabase Free (PostgreSQL y Storage de imágenes), Brevo Free (SMTP); pendiente de confirmación |
 | D6 | Licencia | MIT |
 
 ## Fase 0: base oficial (hecha, en revisión)
@@ -53,6 +53,16 @@ Objetivo: llevar la base del MVP a una aplicación desplegada, segura y presenta
 - [VERITY] Totales de votos, acceso horizontal y archivos inválidos. [SENTINEL] Carga de imágenes.
 - Criterios: los de la Fase 2 de `MVP-ROADMAP.md` con D1 a D3 aplicadas.
 
+### Condiciones del Storage de imágenes (SENTINEL)
+
+| Tarea | Responsable | Revisión | Criterio verificable |
+| --- | --- | --- | --- |
+| 2.S1 Bucket privado en Supabase Storage, acceso solo desde Django con llave guardada como secreto en Render | FORGE | SENTINEL | La llave no aparece en el repo ni en el HTML; una petición anónima directa al bucket falla |
+| 2.S2 Las imágenes se muestran con URL firmada de corta duración o las sirve Django | FORGE | SENTINEL | La URL caduca; las imágenes de borradores u ocultas no son accesibles |
+| 2.S3 Solo se sube la imagen procesada (WebP, máximo 1600 px, sin EXIF) | FORGE | SENTINEL | Prueba: el archivo almacenado no tiene metadatos y respeta el tamaño |
+| 2.S4 Borrar la publicación borra la imagen, más un comando que limpia huérfanos | FORGE | VERITY | Prueba de borrado y prueba del comando de limpieza |
+| 2.S5 Actualizar `PILOTO-PRODUCCION.md`: Supabase pasa a usarse también como Storage | FORGE | VERITY | El documento refleja el uso y la política de borrado |
+
 ## Fase 3: feed, búsqueda y notificaciones
 
 - [FORGE] Orden reciente y por relevancia, búsqueda, filtros y notificaciones internas.
@@ -70,6 +80,9 @@ Objetivo: llevar la base del MVP a una aplicación desplegada, segura y presenta
 - [FORGE] Despliegue en el host elegido con PostgreSQL de Supabase, correo real, `collectstatic`, migraciones y respaldo probado.
 - [SENTINEL] Auditoría del entorno publicado. [VERITY] Recorrido sintético de registro a resolución de reporte en el entorno publicado.
 - [FORGE + SHOGUN] Material de presentación: README final, diagrama de arquitectura y guion de demo con datos sintéticos.
+- [FORGE] `SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")` para el proxy de Render, con prueba de settings. [SENTINEL] audita.
+- [German + FORGE] Dominio propio económico con SPF y DKIM configurados para Brevo. [SENTINEL] verifica los registros DNS.
+- [FORGE] Antes de la presentación, comprobar que el proyecto de Supabase no esté en pausa (se pausa tras una semana sin actividad) y despertar Render con `/health/`.
 - Criterios: URL pública con HTTPS, `/health/` en 200 con base de datos, CI verde en `main`, respaldo restaurado una vez, ningún dato real.
 
 ## Fuera de alcance para la presentación
