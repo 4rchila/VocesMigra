@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ post.title }} — Voces Migra{% endblock %}
+
+{% block content %}
+<article aria-labelledby="post-title">
+  <div class="container">
+    <header class="post-header">
+      <h1 id="post-title" class="post-header__title">{{ post.title }}</h1>
+      {% if post.category %}
+      <span class="card__category">{{ post.get_category_display }}</span>
+      {% endif %}
+      <p class="post-meta">
+        {% if post.author %}<span class="post-meta__item">{% trans "Por" %} {{ post.author }}</span>{% endif %}
+        {% if post.created_at %}<time class="post-meta__item" datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"j M Y" }}</time>{% endif %}
+      </p>
+    </header>
+
+    <div class="post-body">
+      {{ post.content|linebreaksbr }}
+    </div>
+
+    <footer class="post-actions">
+      <a class="button button--secondary" href="{% url 'posts:list' %}">{% trans "Volver a publicaciones" %}</a>
+      {% if user.is_authenticated and user == post.author %}
+      <a class="button button--secondary" href="{% url 'posts:update' post.public_id %}">{% trans "Editar" %}</a>
+      <a class="button button--danger" href="{% url 'posts:delete' post.public_id %}">{% trans "Eliminar" %}</a>
+      {% endif %}
+    </footer>
+  </div>
+</article>
+{% endblock %}

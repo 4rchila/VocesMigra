@@ -1,0 +1,34 @@
+{% load i18n %}
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+<nav class="pagination" aria-label="{% trans 'Paginación' %}">
+  <ul class="pagination__list" role="list">
+    {% if page_obj.has_previous %}
+    <li class="pagination__item">
+      <a class="pagination__link" href="?{{ page_param|default:'page' }}={{ page_obj.previous_page_number }}{% if selected_category %}&categoria={{ selected_category }}{% endif %}">{% trans "Página anterior" %}</a>
+    </li>
+    {% else %}
+    <li class="pagination__item">
+      <span class="pagination__link is-disabled" aria-disabled="true">{% trans "Página anterior" %}</span>
+    </li>
+    {% endif %}
+    {% for page_num in page_obj.paginator.page_range %}
+    <li class="pagination__item">
+      {% if page_num == page_obj.number %}
+      <span class="pagination__link" aria-current="page">{{ page_num }}</span>
+      {% else %}
+      <a class="pagination__link" href="?{{ page_param|default:'page' }}={{ page_num }}{% if selected_category %}&categoria={{ selected_category }}{% endif %}">{{ page_num }}</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li class="pagination__item">
+      <a class="pagination__link" href="?{{ page_param|default:'page' }}={{ page_obj.next_page_number }}{% if selected_category %}&categoria={{ selected_category }}{% endif %}">{% trans "Página siguiente" %}</a>
+    </li>
+    {% else %}
+    <li class="pagination__item">
+      <span class="pagination__link is-disabled" aria-disabled="true">{% trans "Página siguiente" %}</span>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}

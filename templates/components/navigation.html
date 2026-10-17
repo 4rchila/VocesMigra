@@ -1,0 +1,39 @@
+{% load i18n %}
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="{% url 'core:home' %}" aria-label="{% trans 'Voces Migra, página de inicio' %}">
+      <span class="brand__name" aria-hidden="true">Voces Migra</span>
+    </a>
+    <nav class="site-nav" aria-label="{% trans 'Navegación principal' %}">
+      <ul class="nav-list" role="list">
+        <li class="nav-list__item">
+          <a class="nav-list__link" href="{% url 'core:home' %}">{% trans "Inicio" %}</a>
+        </li>
+        <li class="nav-list__item">
+          <a class="nav-list__link" href="{% url 'posts:list' %}">{% trans "Publicaciones" %}</a>
+        </li>
+        <li class="nav-list__item">
+          <a class="nav-list__link nav-list__link--cta" href="{% url 'posts:create' %}">{% trans "Crear una publicación" %}</a>
+        </li>
+        {% if user.is_authenticated %}
+        <li class="nav-list__item">
+          <a class="nav-list__link" href="{% url 'accounts:profile' %}">{% trans "Perfil" %}</a>
+        </li>
+        <li class="nav-list__item">
+          <form class="form-logout" method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button class="nav-list__link nav-list__link--button" type="submit">{% trans "Cerrar sesión" %}</button>
+          </form>
+        </li>
+        {% else %}
+        <li class="nav-list__item">
+          <a class="nav-list__link" href="{% url 'accounts:login' %}">{% trans "Entrar" %}</a>
+        </li>
+        <li class="nav-list__item">
+          <a class="nav-list__link" href="{% url 'accounts:register' %}">{% trans "Registrarse" %}</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</header>

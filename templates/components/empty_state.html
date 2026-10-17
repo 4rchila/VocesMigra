@@ -1,0 +1,14 @@
+{% load i18n %}
+<div class="empty-state">
+  <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="8" y1="12" x2="16" y2="12"></line>
+  </svg>
+  <h2 class="empty-state__title">{{ title }}</h2>
+  {% if description %}
+  <p class="empty-state__description">{{ description }}</p>
+  {% endif %}
+  {% if action_url and action_label %}
+  <a class="button button--primary" href="{{ action_url }}">{{ action_label }}</a>
+  {% endif %}
+</div>

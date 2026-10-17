@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Inicio" %} — Voces Migra{% endblock %}
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container">
+    <h1 id="hero-title">{% trans "Información y apoyo para cada etapa del camino" %}</h1>
+    <p class="hero__description">{% trans "Voces Migra es un espacio comunitario para compartir experiencias, solicitar orientación y consultar recursos útiles relacionados con procesos de migración." %}</p>
+    <div class="hero__actions">
+      <a class="button button--primary" href="{% url 'posts:list' %}">{% trans "Explorar publicaciones" %}</a>
+      <a class="button button--secondary" href="{% url 'posts:create' %}">{% trans "Crear una publicación" %}</a>
+    </div>
+  </div>
+</section>
+
+<section class="notice notice--institutional" aria-labelledby="notice-title">
+  <div class="container">
+    <h2 id="notice-title" class="notice__title">{% trans "Aviso institucional" %}</h2>
+    <p class="notice__text">{% trans "Participa con respeto y protege tus datos personales. La información compartida por la comunidad no sustituye asesoría legal ni atención de emergencia." %}</p>
+  </div>
+</section>
+
+<section class="feed-section" aria-labelledby="feed-title">
+  <div class="container">
+    <div class="section-header">
+      <h2 id="feed-title" class="section-header__title">{% trans "Publicaciones recientes" %}</h2>
+      <a class="button button--small button--secondary" href="{% url 'posts:list' %}">{% trans "Ver todas" %}</a>
+    </div>
+    {% if posts %}
+      <ul class="card-list" role="list">
+        {% for post in posts %}
+        <li class="card-list__item">
+          {% url 'posts:detail' post.public_id as post_url %}
+          {% include "components/card.html" with title=post.title category=post.get_category_display author=post.author date=post.created_at|date:"j M Y" card_url=post_url action_label="Leer más" %}
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% url 'posts:create' as create_url %}
+      {% include "components/empty_state.html" with title="Aún no hay publicaciones" description="Cuando haya publicaciones aparecerán aquí. Puedes empezar compartiendo información útil para la comunidad." action_url=create_url action_label="Crear una publicación" %}
+    {% endif %}
+  </div>
+</section>
+
+<section class="categories-section" aria-labelledby="categories-title">
+  <div class="container">
+    <div class="section-header">
+      <h2 id="categories-title" class="section-header__title">{% trans "Explora por categoría" %}</h2>
+    </div>
+    {% include "components/category_nav.html" %}
+  </div>
+</section>
+{% endblock %}

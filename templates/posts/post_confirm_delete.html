@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Confirmar eliminación" %} — Voces Migra{% endblock %}
+
+{% block content %}
+<section class="delete-confirm" aria-labelledby="delete-title">
+  <div class="container">
+    <h1 id="delete-title">{% trans "Confirmar eliminación" %}</h1>
+    <p>{% trans "Vas a eliminar la publicación:" %} <strong>{{ post.title }}</strong>.</p>
+
+    <div class="notice notice--warning delete-confirm__warning" role="alert">
+      <p class="notice__text">{% trans "Esta acción no se puede deshacer. El contenido dejará de estar disponible para la comunidad." %}</p>
+    </div>
+
+    <form method="post" action="{% url 'posts:delete' post.public_id %}">
+      {% csrf_token %}
+      <div class="form-actions form-actions--spaced">
+        <button class="button button--danger" type="submit">{% trans "Eliminar publicación" %}</button>
+        <a class="button button--secondary" href="{% url 'posts:detail' post.public_id %}">{% trans "Cancelar y volver" %}</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
