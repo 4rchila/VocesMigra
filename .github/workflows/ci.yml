@@ -44,3 +44,4 @@ jobs:
           POSTGRES_PASSWORD: synthetic-only
           POSTGRES_HOST: localhost
           DJANGO_ADMIN_URL: panel-ci
+          DJANGO_CSRF_TRUSTED_ORIGINS: https://ci.example.test

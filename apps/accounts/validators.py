@@ -2,6 +2,8 @@
 
 import re
 
+import pycountry
+
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
@@ -39,3 +41,31 @@ def validate_language_codes(value):
             raise ValidationError(_("No repitas el mismo idioma."))
         seen.add(code)
 
+
+def region_choices():
+    """Lista cerrada de regiones: subdivisiones ISO 3166-2 de todos los países."""
+    return sorted(
+        ((sub.code, f"{sub.name} ({sub.country_code})") for sub in pycountry.subdivisions),
+        key=lambda item: item[1],
+    )
+
+
+def validate_region_for_country(region, country):
+    """La región debe ser un código ISO 3166-2 del país elegido (1.8)."""
+    if not region:
+        return
+    sub = pycountry.subdivisions.get(code=region)
+    if sub is None:
+        raise ValidationError(
+            {"region": _("Elige una región de la lista.")}, code="invalid_region"
+        )
+    if country and sub.country_code != country:
+        raise ValidationError(
+            {"region": _("La región no pertenece al país elegido.")},
+            code="region_country_mismatch",
+        )
+
+
+def region_name(code):
+    sub = pycountry.subdivisions.get(code=code) if code else None
+    return sub.name if sub else ""

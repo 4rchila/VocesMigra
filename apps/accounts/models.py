@@ -22,6 +22,8 @@ from .validators import (
     alias_validator,
     country_validator,
     validate_language_codes,
+    validate_region_for_country,
+    region_name,
 )
 
 
@@ -100,7 +102,13 @@ class Profile(models.Model):
     country = models.CharField(
         _("país"), max_length=2, validators=[country_validator]
     )
-    region = models.CharField(_("región"), max_length=100, blank=True)
+    # Código ISO 3166-2 (p. ej. "GT-GU"); lista cerrada, sin texto libre (1.8).
+    region = models.CharField(
+        _("región"),
+        max_length=6,
+        blank=True,
+        help_text=_("Código ISO 3166-2 de la región; opcional."),
+    )
     languages = models.JSONField(
         _("idiomas"),
         default=list,
@@ -114,3 +122,11 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.alias
+
+    def clean(self):
+        super().clean()
+        validate_region_for_country(self.region, self.country)
+
+    @property
+    def region_display(self):
+        return region_name(self.region)

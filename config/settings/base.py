@@ -91,6 +91,7 @@ MIDDLEWARE = [
     "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.ContentSecurityPolicyMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -166,4 +167,39 @@ TRUSTED_PROXY_COUNT = int(env("TRUSTED_PROXY_COUNT", default="0"))
 
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+}
+
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+CONTENT_SECURITY_POLICY = {
+    "default-src": ["'self'"],
+    "img-src": ["'self'", "data:"],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"],
+}
+
+# Logs sin correos, contraseñas ni IP completas (1.7). Django no registra
+# cuerpos de petición; el filtro recorta IP y correos que aparezcan en mensajes.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"redact": {"()": "apps.core.logging.RedactPersonalDataFilter"}},
+    "formatters": {
+        "plain": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["redact"],
+            "formatter": "plain",
+        }
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        # Las alertas por correo de Django mandarían datos de la petición.
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
 }

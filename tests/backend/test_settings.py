@@ -162,6 +162,7 @@ class ProductionSettingsTests(SimpleTestCase):
             "POSTGRES_HOST": "db.interno",
             "POSTGRES_PORT": "5432",
             "DJANGO_ADMIN_URL": "panel-sintetico",
+            "DJANGO_CSRF_TRUSTED_ORIGINS": "https://voces.example",
         }
 
     def test_requires_secret_key(self):
@@ -205,6 +206,36 @@ class ProductionSettingsTests(SimpleTestCase):
             environment["DJANGO_ADMIN_URL"] = value
             with self.subTest(value=value), self.assertRaises(ImproperlyConfigured):
                 self._import_production(environment)
+
+    def test_proxy_csrf_and_headers(self):
+        module = self._import_production(self.full_environment())
+        self.assertEqual(
+            module.SECURE_PROXY_SSL_HEADER, ("HTTP_X_FORWARDED_PROTO", "https")
+        )
+        self.assertEqual(module.CSRF_TRUSTED_ORIGINS, ["https://voces.example"])
+        self.assertEqual(module.SECURE_REFERRER_POLICY, "strict-origin-when-cross-origin")
+        self.assertEqual(module.TRUSTED_PROXY_COUNT, 1)
+        self.assertEqual(
+            module.CACHES["default"]["BACKEND"],
+            "django.core.cache.backends.db.DatabaseCache",
+        )
+
+    def test_csrf_trusted_origins_must_be_https(self):
+        environment = self.full_environment()
+        environment["DJANGO_CSRF_TRUSTED_ORIGINS"] = "http://voces.example"
+        with self.assertRaises(ImproperlyConfigured):
+            self._import_production(environment)
+
+    def test_smtp_defaults_to_587_with_tls(self):
+        module = self._import_production(self.full_environment())
+        self.assertEqual(module.EMAIL_PORT, 587)
+        self.assertTrue(module.EMAIL_USE_TLS)
+
+    def test_smtp_without_tls_is_rejected(self):
+        environment = self.full_environment()
+        environment["EMAIL_USE_TLS"] = "false"
+        with self.assertRaises(ImproperlyConfigured):
+            self._import_production(environment)
 
 
 class HealthViewTests(TestCase):
