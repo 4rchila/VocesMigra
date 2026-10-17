@@ -67,12 +67,15 @@ DEBUG = env_bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "config.apps.VocesAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     "apps.core",
     "apps.accounts",
     "apps.posts",
@@ -85,6 +88,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -138,3 +142,28 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEFAULT_FROM_EMAIL = "no-responder@voces-migra.local"
+
+# --- Seguridad (Fase 1) ----------------------------------------------------
+
+
+def admin_url(value):
+    """Normaliza la ruta del admin y rechaza ``admin/`` (1.3)."""
+    value = (value or "").strip().strip("/")
+    if not value or value.lower() == "admin":
+        raise ImproperlyConfigured(
+            "DJANGO_ADMIN_URL no puede estar vacía ni ser 'admin'."
+        )
+    return value + "/"
+
+
+# En desarrollo y pruebas hay un valor por defecto; producción lo exige.
+ADMIN_URL = admin_url(env("DJANGO_ADMIN_URL", default="gestion-interna"))
+OTP_TOTP_ISSUER = "Voces Migra"
+
+# Proxies de confianza delante de la app (Render = 1). Con 0 se ignora
+# X-Forwarded-For porque cualquier cliente puede escribirla.
+TRUSTED_PROXY_COUNT = int(env("TRUSTED_PROXY_COUNT", default="0"))
+
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+}

@@ -161,6 +161,7 @@ class ProductionSettingsTests(SimpleTestCase):
             "POSTGRES_PASSWORD": "sintetica",
             "POSTGRES_HOST": "db.interno",
             "POSTGRES_PORT": "5432",
+            "DJANGO_ADMIN_URL": "panel-sintetico",
         }
 
     def test_requires_secret_key(self):
@@ -195,6 +196,16 @@ class ProductionSettingsTests(SimpleTestCase):
         self.assertTrue(module.CSRF_COOKIE_SECURE)
         self.assertTrue(module.SECURE_SSL_REDIRECT)
 
+    def test_requires_admin_url_and_rejects_admin(self):
+        environment = self.full_environment()
+        environment.pop("DJANGO_ADMIN_URL")
+        with self.assertRaises(ImproperlyConfigured):
+            self._import_production(environment)
+        for value in ["admin", "/admin/", " ADMIN "]:
+            environment["DJANGO_ADMIN_URL"] = value
+            with self.subTest(value=value), self.assertRaises(ImproperlyConfigured):
+                self._import_production(environment)
+
 
 class HealthViewTests(TestCase):
     def test_health_url_is_public_and_stable(self):
@@ -204,7 +215,23 @@ class HealthViewTests(TestCase):
         response = self.client.get(reverse("core:health"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/json")
-        self.assertEqual(json.loads(response.content), {"status": "ok"})
+        self.assertEqual(
+            json.loads(response.content), {"status": "ok", "database": "ok"}
+        )
+        self.assertIn("no-cache", response["Cache-Control"])
+
+    def test_health_returns_503_when_database_fails(self):
+        from django.db import OperationalError
+
+        with mock.patch(
+            "apps.core.views.connection.cursor",
+            side_effect=OperationalError("host db.secreto.example caido"),
+        ), self.assertLogs("apps.core.views", level="ERROR"):
+            response = self.client.get(reverse("core:health"))
+        self.assertEqual(response.status_code, 503)
+        body = json.loads(response.content)
+        self.assertEqual(body, {"status": "error", "database": "unavailable"})
+        self.assertNotIn(b"secreto", response.content)
 
     def test_health_rejects_non_get_methods(self):
         response = self.client.post(reverse("core:health"))

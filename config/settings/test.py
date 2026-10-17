@@ -15,3 +15,13 @@ DATABASES = {
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# La caché en memoria dura todo el proceso de pruebas: límites altos para que
+# las pruebas ajenas al rate limit no se bloqueen entre sí. Las pruebas del
+# límite usan override_settings con los valores reales y limpian la caché.
+RATELIMITS = {
+    "login-ip": (10_000, 60),
+    "login-account-ip": (10_000, 60),
+    "register-ip": (10_000, 60),
+    "admin-login-ip": (10_000, 60),
+}

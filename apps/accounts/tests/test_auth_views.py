@@ -62,28 +62,30 @@ class RegistrationTests(TestCase):
         self.assertEqual(template, "accounts/register.html")
         self.assertIsInstance(context["form"], RegistrationForm)
 
-    def test_valid_post_creates_hashed_user_and_logs_in(self):
+    def test_valid_post_creates_inactive_hashed_user_without_login(self):
         response = self.client.post(self.url, registration_data())
         self.assertRedirects(
-            response, reverse("accounts:profile"), fetch_redirect_response=False
+            response, reverse("accounts:register_done"), fetch_redirect_response=False
         )
         user = User.objects.get(email="nueva@example.com")
         self.assertEqual(user.alias, "NuevaCuenta")
+        self.assertFalse(user.is_active)
         self.assertNotEqual(user.password, NEW_PASSWORD)
         self.assertTrue(user.check_password(NEW_PASSWORD))
-        self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)
+        self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_email_is_normalized_to_lowercase(self):
         self.client.post(self.url, registration_data(email="  Nueva@Example.COM "))
         self.assertTrue(User.objects.filter(email="nueva@example.com").exists())
 
-    def test_rejects_duplicate_email_case_insensitively(self):
+    def test_duplicate_email_gets_same_response_without_new_user(self):
         create_user(email="nueva@example.com")
-        response, render_mock = rendered(
-            self.client, self.url, "post", registration_data(email="NUEVA@example.com")
+        response = self.client.post(
+            self.url, registration_data(email="NUEVA@example.com", alias="OtraNueva")
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("email", render_mock.call_args.args[2]["form"].errors)
+        self.assertRedirects(
+            response, reverse("accounts:register_done"), fetch_redirect_response=False
+        )
         self.assertEqual(User.objects.count(), 1)
 
     def test_rejects_duplicate_alias_case_insensitively(self):

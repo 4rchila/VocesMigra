@@ -43,3 +43,4 @@ jobs:
           POSTGRES_USER: synthetic
           POSTGRES_PASSWORD: synthetic-only
           POSTGRES_HOST: localhost
+          DJANGO_ADMIN_URL: panel-ci

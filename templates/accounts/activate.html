@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Activar cuenta" %} — Voces Migra{% endblock %}
+
+{% block content %}
+<section aria-labelledby="auth-title">
+  <div class="container">
+    <div class="auth-card">
+      {% if valid %}
+      <header class="auth-card__header">
+        <h1 id="auth-title" class="auth-card__title">{% trans "Activar tu cuenta" %}</h1>
+        <p class="auth-card__description">{% trans "Confirma para activar tu cuenta e iniciar sesión." %}</p>
+      </header>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-actions form-actions--stacked">
+          <button class="button button--primary" type="submit">{% trans "Activar cuenta" %}</button>
+        </div>
+      </form>
+      {% else %}
+      <header class="auth-card__header">
+        <h1 id="auth-title" class="auth-card__title">{% trans "Enlace no válido" %}</h1>
+        <p class="auth-card__description">{% trans "El enlace caducó o ya se usó. Si tu cuenta aún no está activa, regístrate de nuevo con el mismo correo y te enviaremos otro enlace." %}</p>
+      </header>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

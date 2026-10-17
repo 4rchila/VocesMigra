@@ -1,0 +1,8 @@
+{% autoescape off %}Hola {{ user.alias }}:
+
+Para activar tu cuenta en Voces Migra abre este enlace y confirma:
+
+{{ activation_url }}
+
+El enlace caduca en 3 días y solo sirve una vez. Si no creaste esta cuenta, ignora este mensaje.
+{% endautoescape %}

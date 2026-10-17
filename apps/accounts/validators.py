@@ -38,3 +38,4 @@ def validate_language_codes(value):
         if code in seen:
             raise ValidationError(_("No repitas el mismo idioma."))
         seen.add(code)
+
