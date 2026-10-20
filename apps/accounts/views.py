@@ -9,6 +9,7 @@ con CSRF. La página de cuenta solo la ve su propietaria.
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.db import IntegrityError, transaction
@@ -24,7 +25,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from . import ratelimit
 from .emails import send_activation_email, send_existing_account_notice
-from .forms import LoginForm, RegistrationForm
+from .forms import AliasChangeForm, LoginForm, RegistrationForm
 from .models import User
 from .tokens import activation_token
 
@@ -118,14 +119,17 @@ def _user_from_uid(uidb64):
         return None
 
 
+@sensitive_post_parameters("new_password1", "new_password2")
 @csrf_protect
 @never_cache
 @require_http_methods(FORM_METHODS)
 def activate(request, uidb64, token):
-    """GET muestra la confirmación; POST activa e inicia sesión.
+    """GET muestra el formulario; POST fija la contraseña, activa e inicia sesión.
 
-    La activación va por POST para que los antivirus o vistas previas que abren
-    enlaces de correo no activen cuentas por su cuenta.
+    La contraseña se define aquí, no en el registro: así, si alguien registra
+    el correo de otra persona con una contraseña suya, esa contraseña deja de
+    servir cuando la dueña real del correo activa la cuenta. Va por POST para
+    que los antivirus que abren enlaces de correo no activen cuentas solos.
     """
     user = _user_from_uid(uidb64)
     valid = user is not None and not user.is_active and activation_token.check_token(
@@ -134,11 +138,18 @@ def activate(request, uidb64, token):
     if not valid:
         return render(request, "accounts/activate.html", {"valid": False}, status=400)
     if request.method == "POST":
-        user.is_active = True
-        user.save(update_fields=["is_active"])
-        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        return redirect(settings.LOGIN_REDIRECT_URL)
-    return render(request, "accounts/activate.html", {"valid": True})
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = True
+            user.save(update_fields=["password", "is_active"])
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+            return redirect(settings.LOGIN_REDIRECT_URL)
+    else:
+        form = SetPasswordForm(user)
+    return render(
+        request, "accounts/activate.html", {"valid": True, "form": form, "account": user}
+    )
 
 
 @sensitive_post_parameters("password")
@@ -153,8 +164,10 @@ def login_view(request):
     if request.method == "POST":
         ip = ratelimit.client_ip(request)
         account = User.objects.normalize_email(request.POST.get("username", "")).lower()
-        if ratelimit.is_limited("login-ip", ip) or ratelimit.is_limited(
-            "login-account-ip", account, ip
+        if (
+            ratelimit.is_limited("login-ip", ip)
+            or ratelimit.is_limited("login-account-ip", account, ip)
+            or ratelimit.is_limited("login-account", account)
         ):
             form = _with_limit_error(LoginForm(request))
             return render(
@@ -170,6 +183,7 @@ def login_view(request):
             return redirect(next_url or settings.LOGIN_REDIRECT_URL)
         ratelimit.hit("login-ip", ip)
         ratelimit.hit("login-account-ip", account, ip)
+        ratelimit.hit("login-account", account)
     else:
         form = LoginForm(request)
     return render(request, "accounts/login.html", {"form": form, "next": next_url})
@@ -189,3 +203,20 @@ def logout_view(request):
 def profile(request):
     """Página de cuenta visible únicamente para quien inició sesión."""
     return render(request, "accounts/profile.html", {"account": request.user})
+
+
+@login_required
+@csrf_protect
+@never_cache
+@require_http_methods(FORM_METHODS)
+def change_alias(request):
+    """Permite cambiar el alias público, por ejemplo si otra persona lo eligió
+    al registrarse antes con tu correo (observación de SENTINEL)."""
+    if request.method == "POST":
+        form = AliasChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("accounts:profile")
+    else:
+        form = AliasChangeForm(instance=request.user)
+    return render(request, "accounts/change_alias.html", {"form": form})

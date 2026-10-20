@@ -13,6 +13,8 @@ from django.core.cache import cache
 DEFAULT_RATELIMITS = {
     "login-ip": (20, 15 * 60),
     "login-account-ip": (5, 15 * 60),
+    # Tope por cuenta desde cualquier IP: frena ataques repartidos entre IP.
+    "login-account": (50, 60 * 60),
     "register-ip": (5, 60 * 60),
     "admin-login-ip": (5, 15 * 60),
 }
@@ -29,6 +31,13 @@ def client_ip(request):
     porque esa cabecera la puede escribir cualquier cliente. Se toma la entrada
     añadida por el último proxy de confianza, no la primera de la lista.
     """
+    header = getattr(settings, "CLIENT_IP_HEADER", "")
+    if header:
+        # Cabecera que el proveedor siempre reescribe (Vercel:
+        # X-Vercel-Forwarded-For); un cliente no la puede falsificar.
+        value = request.META.get(header, "").split(",")[0].strip()
+        if value:
+            return value
     count = getattr(settings, "TRUSTED_PROXY_COUNT", 0)
     if count:
         parts = [

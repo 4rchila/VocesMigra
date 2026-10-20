@@ -86,3 +86,24 @@ class LoginForm(AuthenticationForm):
 
     def clean_username(self):
         return User.objects.normalize_email(self.cleaned_data["username"]).lower()
+
+
+class AliasChangeForm(forms.ModelForm):
+    """Cambio del alias público con las mismas reglas que el registro."""
+
+    class Meta:
+        model = User
+        fields = ("alias",)
+        labels = {"alias": _("Nuevo alias público")}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["alias"].widget.attrs["autocomplete"] = "username"
+        _style_fields(self)
+
+    def clean_alias(self):
+        alias = self.cleaned_data["alias"].strip()
+        taken = User.objects.filter(alias__iexact=alias).exclude(pk=self.instance.pk)
+        if taken.exists():
+            raise forms.ValidationError(_("Este alias ya está en uso."), code="alias_taken")
+        return alias

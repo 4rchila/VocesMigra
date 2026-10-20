@@ -164,6 +164,8 @@ OTP_TOTP_ISSUER = "Voces Migra"
 # Proxies de confianza delante de la app (Render = 1). Con 0 se ignora
 # X-Forwarded-For porque cualquier cliente puede escribirla.
 TRUSTED_PROXY_COUNT = int(env("TRUSTED_PROXY_COUNT", default="0"))
+# Cabecera de IP del cliente que el proveedor reescribe siempre ("" = ninguna).
+CLIENT_IP_HEADER = env("CLIENT_IP_HEADER", default="")
 
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}

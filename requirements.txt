@@ -3,3 +3,4 @@ psycopg[binary]==3.3.6
 django-otp==1.7.5
 qrcode==8.2
 pycountry==26.2.16
+whitenoise==6.12.0

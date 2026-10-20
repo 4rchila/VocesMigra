@@ -129,6 +129,42 @@ class ClientIpTests(TestCase):
 
 class RegistrationWithoutEnumerationTests(TestCase):
     url = reverse("accounts:register")
+    OWNER_PASSWORD = "Clave-de-la-duena-789"
+
+    def chosen_password(self):
+        return {"new_password1": self.OWNER_PASSWORD, "new_password2": self.OWNER_PASSWORD}
+
+    def activation_path(self, index=0):
+        link = re.search(r"https?://\S+/activar/\S+", mail.outbox[index].body).group(0)
+        return link.split("testserver", 1)[1]
+
+    def test_preregistration_password_is_discarded_on_activation(self):
+        # Ataque: alguien registra el correo de la víctima con su contraseña A.
+        self.client.post(self.url, registration_data(password1="Atacante-A-123", password2="Atacante-A-123"))
+        victim = self.client_class()
+        response = victim.post(self.activation_path(), self.chosen_password())
+        self.assertEqual(response.status_code, 302)
+        attacker = self.client_class()
+        response = attacker.post(
+            reverse("accounts:login"),
+            {"username": "nueva@example.com", "password": "Atacante-A-123"},
+        )
+        self.assertNotIn("_auth_user_id", attacker.session)
+        user = User.objects.get(email="nueva@example.com")
+        self.assertFalse(user.check_password("Atacante-A-123"))
+        self.assertTrue(user.check_password(self.OWNER_PASSWORD))
+
+    def test_activation_requires_valid_matching_password(self):
+        self.client.post(self.url, registration_data())
+        response = self.client.post(
+            self.activation_path(), {"new_password1": "12345678", "new_password2": "12345678"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.get(email="nueva@example.com").is_active)
+
+    def test_activation_page_shows_alias_to_the_owner(self):
+        self.client.post(self.url, registration_data())
+        self.assertContains(self.client.get(self.activation_path()), "NuevaCuenta")
 
     def test_new_and_existing_email_get_identical_response(self):
         User.objects.create_user("usada@example.com", "Usada", PASSWORD)
@@ -159,19 +195,21 @@ class RegistrationWithoutEnumerationTests(TestCase):
         user = User.objects.get(email="nueva@example.com")
         self.assertFalse(user.is_active, "GET no debe activar la cuenta")
 
-        response = self.client.post(path)
+        response = self.client.post(path, self.chosen_password())
         self.assertRedirects(response, reverse("accounts:profile"), fetch_redirect_response=False)
         user.refresh_from_db()
         self.assertTrue(user.is_active)
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)
 
         self.client.post(reverse("accounts:logout"))
-        self.assertEqual(self.client.post(path).status_code, 400)
+        self.assertEqual(self.client.post(path, self.chosen_password()).status_code, 400)
 
     def test_tampered_token_is_rejected(self):
         self.client.post(self.url, registration_data())
         link = re.search(r"/cuenta/activar/[^/]+/", mail.outbox[0].body).group(0)
-        self.assertEqual(self.client.post(link + "token-falso/").status_code, 400)
+        self.assertEqual(
+            self.client.post(link + "token-falso/", self.chosen_password()).status_code, 400
+        )
         self.assertFalse(User.objects.get(email="nueva@example.com").is_active)
 
     def test_unactivated_account_cannot_log_in_and_gets_generic_error(self):
@@ -245,3 +283,60 @@ class AdminTwoFactorTests(TestCase):
             reverse("admin:login"), {"username": "jefa@example.com", "password": PASSWORD}
         )
         self.assertEqual(response.status_code, 429)
+
+
+class PurgeUnactivatedAccountsTests(TestCase):
+    def test_deletes_only_expired_never_used_inactive_accounts(self):
+        from datetime import timedelta
+
+        from django.core.management import call_command
+        from django.utils import timezone
+
+        old = timezone.now() - timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT + 60)
+        stale = User.objects.create_user("vieja@example.com", "Vieja", PASSWORD, is_active=False)
+        fresh = User.objects.create_user("fresca@example.com", "Fresca", PASSWORD, is_active=False)
+        banned = User.objects.create_user("baneada@example.com", "Baneada", PASSWORD, is_active=False)
+        User.objects.filter(pk__in=[stale.pk, banned.pk]).update(date_joined=old)
+        User.objects.filter(pk=banned.pk).update(last_login=old)
+
+        call_command("purge_unactivated_accounts", stdout=open("/dev/null", "w"))
+
+        remaining = set(User.objects.values_list("email", flat=True))
+        self.assertEqual(remaining, {"fresca@example.com", "baneada@example.com"})
+
+
+class VercelAndAliasTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    @override_settings(CLIENT_IP_HEADER="HTTP_X_VERCEL_FORWARDED_FOR", TRUSTED_PROXY_COUNT=1)
+    def test_client_ip_prefers_provider_header_over_spoofable_xff(self):
+        from django.test import RequestFactory
+
+        from apps.accounts.ratelimit import client_ip
+
+        request = RequestFactory().get(
+            "/", HTTP_X_FORWARDED_FOR="6.6.6.6", HTTP_X_VERCEL_FORWARDED_FOR="203.0.113.7"
+        )
+        self.assertEqual(client_ip(request), "203.0.113.7")
+
+    @override_settings(RATELIMITS={"login-account": (3, 3600), "login-ip": (100, 900), "login-account-ip": (100, 900)}, TRUSTED_PROXY_COUNT=1, CLIENT_IP_HEADER="")
+    def test_global_account_limit_blocks_attempts_spread_over_ips(self):
+        User.objects.create_user("victima@example.com", "Victima", PASSWORD)
+        url = reverse("accounts:login")
+        for n in range(3):
+            self.client.post(url, {"username": "victima@example.com", "password": "mala"}, HTTP_X_FORWARDED_FOR=f"198.51.100.{n}")
+        response = self.client.post(url, {"username": "victima@example.com", "password": PASSWORD}, HTTP_X_FORWARDED_FOR="198.51.100.99")
+        self.assertEqual(response.status_code, 429)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_change_alias_requires_login_and_unique_alias(self):
+        url = reverse("accounts:change_alias")
+        self.assertEqual(self.client.get(url).status_code, 302)
+        user = User.objects.create_user("duena@example.com", "AliasAjeno", PASSWORD)
+        User.objects.create_user("otra@example.com", "Ocupado", PASSWORD)
+        self.client.force_login(user)
+        self.assertEqual(self.client.post(url, {"alias": "ocupado"}).status_code, 200)
+        self.assertRedirects(self.client.post(url, {"alias": "MiAlias"}), reverse("accounts:profile"), fetch_redirect_response=False)
+        user.refresh_from_db()
+        self.assertEqual(user.alias, "MiAlias")

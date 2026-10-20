@@ -36,10 +36,26 @@ CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")  # noqa: F405
 if any(not origin.startswith("https://") for origin in CSRF_TRUSTED_ORIGINS):
     raise ImproperlyConfigured("DJANGO_CSRF_TRUSTED_ORIGINS solo admite https://.")
 
-# Render termina TLS en su proxy y avisa con X-Forwarded-Proto. Solo es seguro
-# porque Render reescribe esa cabecera; no copiar a otro host sin comprobarlo.
+# Vercel (D5) termina TLS y escribe X-Forwarded-Proto. Para la IP real usa
+# X-Vercel-Forwarded-For, que Vercel reescribe siempre para evitar suplantación
+# (docs: vercel.com/docs/headers/request-headers). Otro host: revisar esto.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CLIENT_IP_HEADER = env("CLIENT_IP_HEADER", default="HTTP_X_VERCEL_FORWARDED_FOR")  # noqa: F405
 TRUSTED_PROXY_COUNT = int(env("TRUSTED_PROXY_COUNT", default="1"))  # noqa: F405
+
+# Vercel sirve los estáticos desde su CDN tras su collectstatic automático;
+# WhiteNoise los sirve en `vercel dev` y si la app corre en otro host.
+MIDDLEWARE = [  # noqa: F405
+    *MIDDLEWARE[:1],  # noqa: F405
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    *MIDDLEWARE[1:],  # noqa: F405
+]
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+}
 
 # Caché compartida entre procesos para que el límite de intentos sea global.
 # Requiere una vez: python manage.py createcachetable
@@ -51,7 +67,7 @@ CACHES = {
 }
 
 SECURE_SSL_REDIRECT = True
-# El chequeo de salud de Render puede llegar por HTTP interno.
+# El chequeo de salud puede llegar por HTTP interno.
 SECURE_REDIRECT_EXEMPT = [r"^health/$"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True

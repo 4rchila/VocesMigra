@@ -1,0 +1,7 @@
+# Configuración de despliegue en Vercel (D5). Las dependencias siguen en
+# requirements.txt.
+[tool.vercel]
+entrypoint = "config.wsgi:application"
+
+[tool.vercel.scripts]
+build = "python scripts/vercel_build.py"
