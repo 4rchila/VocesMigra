@@ -34,7 +34,7 @@ La CI de GitHub Actions corre la suite, comprueba migraciones pendientes y ejecu
 
 ## Despliegue
 
-Producción usa `config.settings.production` en Render Free, con PostgreSQL de Supabase y correo de Brevo (decisión D5 en `docs/plan/PLAN-OFICIAL.md`). Exige `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_ADMIN_URL` y las variables `POSTGRES_*`, y activa HTTPS, cookies seguras, HSTS, CSP y Referrer-Policy. Tras migrar hay que crear la tabla de caché que usa el límite de intentos:
+Producción usa `config.settings.production` en Vercel Hobby (guía en `docs/operations/DESPLIEGUE-VERCEL.md`), con PostgreSQL de Supabase y correo de Brevo (decisión D5 en `docs/plan/PLAN-OFICIAL.md`). Exige `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_ADMIN_URL` y las variables `POSTGRES_*`, y activa HTTPS, cookies seguras, HSTS, CSP y Referrer-Policy. Tras migrar hay que crear la tabla de caché que usa el límite de intentos:
 
 ```bash
 python manage.py migrate

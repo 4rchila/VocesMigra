@@ -43,8 +43,8 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CLIENT_IP_HEADER = env("CLIENT_IP_HEADER", default="HTTP_X_VERCEL_FORWARDED_FOR")  # noqa: F405
 TRUSTED_PROXY_COUNT = int(env("TRUSTED_PROXY_COUNT", default="1"))  # noqa: F405
 
-# Vercel sirve los estáticos desde su CDN tras su collectstatic automático;
-# WhiteNoise los sirve en `vercel dev` y si la app corre en otro host.
+# Vercel corre collectstatic en el build porque STATIC_ROOT está definido. WhiteNoise
+# sirve los estáticos desde Django; si el CDN de Vercel los atiende antes, WhiteNoise queda de respaldo (confirmar en el primer despliegue).
 MIDDLEWARE = [  # noqa: F405
     *MIDDLEWARE[:1],  # noqa: F405
     "whitenoise.middleware.WhiteNoiseMiddleware",
