@@ -106,6 +106,5 @@ python manage.py purge_unactivated_accounts
 
 ## Discrepancias abiertas
 
-- `README.md` todavía dice que producción usa **Render Free**. Hay que actualizarlo a Vercel. Está en la rama de FORGE y no lo edité.
 - Hay dos versiones sobre los estáticos: el comentario de `production.py` dice que los sirve el CDN de Vercel, mientras que el resumen de FORGE dice que WhiteNoise los sirve fuera del CDN. Se confirma en el primer despliegue.
 - Las imágenes siguen en `FileSystemStorage`. Hay que conectar Supabase Storage antes de la Fase 2.

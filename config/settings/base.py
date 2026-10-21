@@ -161,7 +161,7 @@ def admin_url(value):
 ADMIN_URL = admin_url(env("DJANGO_ADMIN_URL", default="gestion-interna"))
 OTP_TOTP_ISSUER = "Voces Migra"
 
-# Proxies de confianza delante de la app (Render = 1). Con 0 se ignora
+# Proxies de confianza delante de la app (ver docs/operations/DESPLIEGUE-VERCEL.md). Con 0 se ignora
 # X-Forwarded-For porque cualquier cliente puede escribirla.
 TRUSTED_PROXY_COUNT = int(env("TRUSTED_PROXY_COUNT", default="0"))
 # Cabecera de IP del cliente que el proveedor reescribe siempre ("" = ninguna).

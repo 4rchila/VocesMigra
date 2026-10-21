@@ -27,9 +27,8 @@
 ## Pendientes
 1. Aplicar los parches con `git am` en este orden: 0001, 0002, 0003 y 0004.
 2. `purge_unactivated_accounts` queda como paso manual. El cron con `CRON_SECRET` pasa a la Fase 2.
-3. Actualizar el `README.md` de Render a Vercel.
-4. Fase 2: conectar Supabase Storage antes de las imágenes.
-5. Riesgo aceptado para el MVP: alguien puede bloquear una cuenta ajena durante una hora con 50 intentos fallidos.
+3. Fase 2: conectar Supabase Storage antes de las imágenes.
+4. Riesgo aceptado para el MVP: alguien puede bloquear una cuenta ajena durante una hora con 50 intentos fallidos.
 
 ## Siguiente paso
 German aprueba el push. Después sigue la rama aparte con ruff, pre-commit y las reglas en posts.

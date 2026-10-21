@@ -26,7 +26,7 @@ Objetivo: llevar la base del MVP a una aplicación desplegada, segura y presenta
 | D2 | Imágenes | Máximo 5 MB, redimensionadas a 1600 px por lado como máximo y guardadas en WebP sin metadatos |
 | D3 | Comentarios previos | No existen; se implementan desde cero en la Fase 2 |
 | D4 | Bloqueantes de seguridad | Van en la Fase 1, antes de la moderación |
-| D5 | Hosting y correo | Confirmada (17 oct 2026): Render Free (app), Supabase Free (PostgreSQL y Storage de imágenes), Brevo Free (SMTP) |
+| D5 | Hosting y correo | Confirmada (19 oct 2026, decisión de German): Vercel Hobby (app), Supabase Free (PostgreSQL y Storage de imágenes), Brevo Free (SMTP) |
 | D7 | Dominio | `.tech` gratis 1 año del GitHub Student Developer Pack (confirmada 17 oct 2026); la renovación se paga |
 | D6 | Licencia | MIT |
 
@@ -61,7 +61,7 @@ Estado (17 oct 2026): implementada en la rama `fase-1-seguridad`, pendiente de r
 
 | Tarea | Responsable | Revisión | Criterio verificable |
 | --- | --- | --- | --- |
-| 2.S1 Bucket privado en Supabase Storage, acceso solo desde Django con llave guardada como secreto en Render | FORGE | SENTINEL | La llave no aparece en el repo ni en el HTML; una petición anónima directa al bucket falla |
+| 2.S1 Bucket privado en Supabase Storage, acceso solo desde Django con llave guardada como variable secreta del host de D5 (ver [DESPLIEGUE-VERCEL.md](../operations/DESPLIEGUE-VERCEL.md)) | FORGE | SENTINEL | La llave no aparece en el repo ni en el HTML; una petición anónima directa al bucket falla |
 | 2.S2 Las imágenes se muestran con URL firmada de corta duración o las sirve Django | FORGE | SENTINEL | La URL caduca; las imágenes de borradores u ocultas no son accesibles |
 | 2.S3 Solo se sube la imagen procesada (WebP, máximo 1600 px, sin EXIF) | FORGE | SENTINEL | Prueba: el archivo almacenado no tiene metadatos y respeta el tamaño |
 | 2.S4 Borrar la publicación borra la imagen, más un comando que limpia huérfanos | FORGE | VERITY | Prueba de borrado y prueba del comando de limpieza |
@@ -84,11 +84,11 @@ Estado (17 oct 2026): implementada en la rama `fase-1-seguridad`, pendiente de r
 - [FORGE] Despliegue en el host elegido con PostgreSQL de Supabase, correo real, `collectstatic`, migraciones y respaldo probado.
 - [SENTINEL] Auditoría del entorno publicado. [VERITY] Recorrido sintético de registro a resolución de reporte en el entorno publicado.
 - [FORGE + ARCHITECT] Material de presentación: README final, diagrama de arquitectura y guion de demo con datos sintéticos.
-- [FORGE] Variables de Render: `DJANGO_ADMIN_URL`, `DJANGO_CSRF_TRUSTED_ORIGINS`, `TRUSTED_PROXY_COUNT=1` y `python manage.py createcachetable` tras migrar (la proxy header ya quedó en la Fase 1).
+- [FORGE] Variables del host según [DESPLIEGUE-VERCEL.md](../operations/DESPLIEGUE-VERCEL.md) (`DJANGO_ADMIN_URL`, `DJANGO_CSRF_TRUSTED_ORIGINS`, cabecera de IP) y `python manage.py createcachetable` tras migrar (la proxy header ya quedó en la Fase 1).
 - [German + FORGE] Dominio `.tech` (D7) con SPF, DKIM y DMARC (`p=quarantine`) para Brevo. [SENTINEL] verifica los registros DNS.
 - [German] Activar 2FA en la cuenta del registrador del dominio y anotar la fecha de vencimiento; MALENIA crea un aviso un mes antes. Si el dominio vence y otra persona lo registra, recibe el tráfico y los correos de la app.
 - [FORGE] HSTS queda sin `preload` ni `includeSubDomains` mientras el dominio no sea definitivo (salir de la lista de preload tarda meses).
-- [FORGE] Antes de la presentación, comprobar que el proyecto de Supabase no esté en pausa (se pausa tras una semana sin actividad) y despertar Render con `/health/`.
+- [FORGE] Antes de la presentación, comprobar que el proyecto de Supabase no esté en pausa (se pausa tras una semana sin actividad) y comprobar `/health/` en el despliegue (ver [DESPLIEGUE-VERCEL.md](../operations/DESPLIEGUE-VERCEL.md)).
 - Criterios: URL pública con HTTPS, `/health/` en 200 con base de datos, CI verde en `main`, respaldo restaurado una vez, ningún dato real.
 
 ## Fuera de alcance para la presentación
