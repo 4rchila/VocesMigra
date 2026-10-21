@@ -30,7 +30,7 @@ Las variables se leen del entorno del proceso; `.env` no se carga solo.
 DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test tests apps.accounts.tests
 ```
 
-La CI de GitHub Actions corre la suite, comprueba migraciones pendientes y ejecuta `check --deploy` con valores sintéticos en cada push y pull request a `main`.
+La CI de GitHub Actions corre la suite, comprueba migraciones pendientes y ejecuta `check --deploy` con valores sintéticos en cada push y pull request a `main` y en cada push a ramas `fase-*`. También ejecuta `scripts/check_host_refs.py`, que falla si se nombra el host viejo fuera de D5.
 
 ## Despliegue
 

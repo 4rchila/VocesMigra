@@ -20,7 +20,7 @@ TARGETS = ["README.md", "docs", "config", "scripts", "vercel.json", ".env.exampl
 SUFFIXES = {".md", ".py", ".json", ".txt", ".yml", ".yaml", ".toml", ".cfg", ".ini", ".example", ".html", ".sh"}
 PATTERN = re.compile(r"(?<![.\w])render\b(?![(_])", re.IGNORECASE)
 HOST_OK = re.compile(r"(#|<!--)\s*host-ok:\s*\S")
-SELF = Path(__file__).resolve()
+SELF_REL = Path("scripts/check_host_refs.py")  # relativa a la raíz del repo
 
 
 def files(root):
@@ -38,7 +38,7 @@ def main():
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     hits = []
     for f in files(root):
-        if f.resolve() == SELF:
+        if f.relative_to(root) == SELF_REL:
             continue
         try:
             lines = f.read_text(encoding="utf-8").splitlines()

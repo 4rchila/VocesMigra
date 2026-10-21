@@ -34,11 +34,11 @@ Objetivo: llevar la base del MVP a una aplicación desplegada, segura y presenta
 
 - [FORGE] Traslado del MVP sin la capa de agentes, con README, LICENSE, `.gitignore` y CI.
 - [VERITY] Revisión del traslado. [SENTINEL] Auditoría del árbol y la CI.
-- Criterios: 188 pruebas pasan, `check --deploy` sin avisos con valores sintéticos, sin migraciones pendientes, ningún secreto ni dato real en el árbol.
+- Criterios: 226 pruebas pasan (verificado el 21 oct 2026), `check --deploy` sin avisos con valores sintéticos, sin migraciones pendientes, ningún secreto ni dato real en el árbol.
 
 ## Fase 1: seguridad base y operación
 
-Estado (17 oct 2026): implementada en la rama `fase-1-seguridad`, pendiente de revisión de SENTINEL (1.1–1.3, 1.5–1.7) y VERITY. Las tareas 1.5–1.8 van en un commit aparte.
+Estado (19 oct 2026): implementada en la rama `fase-1-seguridad` y revisada: SENTINEL aprueba con observaciones (1.1–1.3, 1.5–1.7) y VERITY dictamina «cumple con observaciones» (ver [CIERRE-FASE-1.md](CIERRE-FASE-1.md)). Las tareas 1.5–1.8 van en un commit aparte.
 
 | Tarea | Responsable | Revisión | Criterio verificable |
 | --- | --- | --- | --- |
