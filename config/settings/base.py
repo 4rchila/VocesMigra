@@ -67,12 +67,15 @@ DEBUG = env_bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "config.apps.VocesAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     "apps.core",
     "apps.accounts",
     "apps.posts",
@@ -85,8 +88,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.ContentSecurityPolicyMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -138,3 +143,65 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEFAULT_FROM_EMAIL = "no-responder@voces-migra.local"
+
+# --- Seguridad (Fase 1) ----------------------------------------------------
+
+
+def admin_url(value):
+    """Normaliza la ruta del admin y rechaza ``admin/`` (1.3)."""
+    value = (value or "").strip().strip("/")
+    if not value or value.lower() == "admin":
+        raise ImproperlyConfigured(
+            "DJANGO_ADMIN_URL no puede estar vacía ni ser 'admin'."
+        )
+    return value + "/"
+
+
+# En desarrollo y pruebas hay un valor por defecto; producción lo exige.
+ADMIN_URL = admin_url(env("DJANGO_ADMIN_URL", default="gestion-interna"))
+OTP_TOTP_ISSUER = "Voces Migra"
+
+# Proxies de confianza delante de la app (ver docs/operations/DESPLIEGUE-VERCEL.md). Con 0 se ignora
+# X-Forwarded-For porque cualquier cliente puede escribirla.
+TRUSTED_PROXY_COUNT = int(env("TRUSTED_PROXY_COUNT", default="0"))
+# Cabecera de IP del cliente que el proveedor reescribe siempre ("" = ninguna).
+CLIENT_IP_HEADER = env("CLIENT_IP_HEADER", default="")
+
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+}
+
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+CONTENT_SECURITY_POLICY = {
+    "default-src": ["'self'"],
+    "img-src": ["'self'", "data:"],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"],
+}
+
+# Logs sin correos, contraseñas ni IP completas (1.7). Django no registra
+# cuerpos de petición; el filtro recorta IP y correos que aparezcan en mensajes.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"redact": {"()": "apps.core.logging.RedactPersonalDataFilter"}},
+    "formatters": {
+        "plain": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["redact"],
+            "formatter": "plain",
+        }
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        # Las alertas por correo de Django mandarían datos de la petición.
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
+}

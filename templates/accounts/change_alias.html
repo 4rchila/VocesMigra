@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Cambiar alias" %} — Voces Migra{% endblock %}
+
+{% block content %}
+<section class="auth-section" aria-labelledby="alias-title">
+  <div class="container">
+    <div class="auth-card">
+      <h1 id="alias-title" class="auth-card__title">{% trans "Cambiar alias" %}</h1>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% with field=form.alias %}
+        <div class="form-group">
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          <input class="form-control{% if field.errors %} form-control--error{% endif %}" id="{{ field.id_for_label }}" name="{{ field.html_name }}" type="text" value="{{ field.value|default_if_none:'' }}" autocomplete="username" required{% if field.errors %} aria-invalid="true" aria-describedby="{{ field.id_for_label }}_error"{% endif %}>
+          {% if field.errors %}
+          <ul class="form-error" id="{{ field.id_for_label }}_error" role="list">
+            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endwith %}
+        <div class="form-actions">
+          <button class="button button--primary" type="submit">{% trans "Guardar alias" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

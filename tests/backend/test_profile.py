@@ -23,7 +23,7 @@ class ProfileTests(TestCase):
         profile = Profile(
             user=self.user,
             country="ES",
-            region="Comunidad de Madrid",
+            region="ES-MD",
             description="Descripción sintética.",
             languages=["es", "en"],
         )
