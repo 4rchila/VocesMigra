@@ -11,6 +11,7 @@
         <h1 id="profile-title" class="profile-card__name">{{ user.alias|default:user }}</h1>
         <p class="profile-card__meta">
           <span>{% trans "Miembro desde" %} {{ user.date_joined|date:"j M Y" }}</span>
+          <a href="{% url 'accounts:change_alias' %}">{% trans "Cambiar alias" %}</a>
         </p>
       </header>
 
@@ -26,7 +27,7 @@
           <li>{% trans "País:" %} {{ profile.country }}</li>
           {% endif %}
           {% if profile.region %}
-          <li>{% trans "Región:" %} {{ profile.region }}</li>
+          <li>{% trans "Región:" %} {{ profile.region_display }}</li>
           {% endif %}
           {% if profile.languages %}
           <li>

@@ -1,0 +1,8 @@
+{% autoescape off %}Hola {{ user.alias }}:
+
+Alguien intentó crear una cuenta en Voces Migra con este correo, pero ya tienes una.
+
+Si fuiste tú, inicia sesión aquí: {{ login_url }}
+
+Si no fuiste tú, puedes ignorar este mensaje. Tu cuenta no cambió.
+{% endautoescape %}

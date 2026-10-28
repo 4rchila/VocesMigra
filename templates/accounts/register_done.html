@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Revisa tu correo" %} — Voces Migra{% endblock %}
+
+{% block content %}
+<section aria-labelledby="auth-title">
+  <div class="container">
+    <div class="auth-card">
+      <header class="auth-card__header">
+        <h1 id="auth-title" class="auth-card__title">{% trans "Revisa tu correo" %}</h1>
+        <p class="auth-card__description">{% trans "Si el correo es válido, te enviamos un mensaje con los siguientes pasos. Puede tardar unos minutos; revisa también la carpeta de spam." %}</p>
+      </header>
+      <div class="auth-links">
+        <p><a href="{% url 'accounts:login' %}">{% trans "Ir a iniciar sesión" %}</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
