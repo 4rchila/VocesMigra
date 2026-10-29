@@ -6,6 +6,9 @@ registro tienen límite de intentos (1.1). El cierre de sesión solo acepta POST
 con CSRF. La página de cuenta solo la ve su propietaria.
 """
 
+import logging
+import smtplib
+
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -29,8 +32,12 @@ from .forms import AliasChangeForm, LoginForm, RegistrationForm
 from .models import User
 from .tokens import activation_token
 
+logger = logging.getLogger(__name__)
+
 FORM_METHODS = ["GET", "POST"]
 TOO_MANY_ATTEMPTS = "Demasiados intentos. Espera unos minutos e inténtalo de nuevo."
+# Mismo texto y estado para los tres caminos: no delata si el correo existe.
+SEND_FAILED = "No pudimos enviar el correo de confirmación. Inténtalo de nuevo más tarde."
 
 
 def _with_limit_error(form):
@@ -57,29 +64,39 @@ def _safe_next_url(request):
 
 
 def _register_new_or_notify(request, form):
-    """Crea la cuenta inactiva o avisa al dueño del correo ya registrado."""
+    """Crea la cuenta inactiva o avisa al dueño del correo ya registrado.
+
+    Devuelve ``False`` si el correo no se pudo enviar. En el caso nuevo, el
+    usuario y el correo van en la misma transacción: si falla el envío, no
+    queda una cuenta inactiva huérfana que nadie puede activar.
+    """
     email = form.cleaned_data["email"]
-    existing = User.objects.filter(email__iexact=email).first()
-    if existing is None:
-        try:
-            with transaction.atomic():
-                user = form.save(commit=False)
-                user.is_active = False
-                user.save()
-        except IntegrityError:
-            # Dos registros simultáneos con el mismo correo o alias.
-            existing = User.objects.filter(email__iexact=email).first()
-            if existing is None:
-                raise
+    try:
+        existing = User.objects.filter(email__iexact=email).first()
+        if existing is None:
+            try:
+                with transaction.atomic():
+                    user = form.save(commit=False)
+                    user.is_active = False
+                    user.save()
+                    send_activation_email(request, user)
+                return True
+            except IntegrityError:
+                # Dos registros simultáneos con el mismo correo o alias.
+                existing = User.objects.filter(email__iexact=email).first()
+                if existing is None:
+                    raise
+        # Iguala el coste de hash para que el tiempo de respuesta no delate el caso.
+        make_password(form.cleaned_data["password1"])
+        if existing.is_active:
+            send_existing_account_notice(request, existing)
         else:
-            send_activation_email(request, user)
-            return
-    # Iguala el coste de hash para que el tiempo de respuesta no delate el caso.
-    make_password(form.cleaned_data["password1"])
-    if existing.is_active:
-        send_existing_account_notice(request, existing)
-    else:
-        send_activation_email(request, existing)
+            send_activation_email(request, existing)
+    except (smtplib.SMTPException, OSError):
+        # Sin el correo en el registro: el dato personal no debe llegar a los logs.
+        logger.exception("Fallo al enviar correo de registro")
+        return False
+    return True
 
 
 @sensitive_post_parameters("password1", "password2")
@@ -98,8 +115,10 @@ def register(request):
         ratelimit.hit("register-ip", ip)
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            _register_new_or_notify(request, form)
-            return redirect("accounts:register_done")
+            if _register_new_or_notify(request, form):
+                return redirect("accounts:register_done")
+            form.add_error(None, _(SEND_FAILED))
+            return render(request, "accounts/register.html", {"form": form}, status=503)
     else:
         form = RegistrationForm()
     return render(request, "accounts/register.html", {"form": form})

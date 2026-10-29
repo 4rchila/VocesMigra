@@ -20,6 +20,12 @@ class SecurityHeadersTests(TestCase):
         self.assertNotIn("unsafe-inline", csp)
         self.assertEqual(response["Referrer-Policy"], "strict-origin-when-cross-origin")
 
+    def test_permissions_policy_denies_camera_microphone_geolocation(self):
+        response = self.client.get(reverse("core:home"))
+        self.assertEqual(
+            response["Permissions-Policy"], "camera=(), microphone=(), geolocation=()"
+        )
+
 
 class LogRedactionTests(SimpleTestCase):
     def test_redacts_email_and_truncates_ips(self):

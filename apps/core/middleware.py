@@ -24,3 +24,21 @@ class ContentSecurityPolicyMiddleware:
         if self.header and "Content-Security-Policy" not in response:
             response["Content-Security-Policy"] = self.header
         return response
+
+
+class PermissionsPolicyMiddleware:
+    """Añade ``Permissions-Policy`` si ``PERMISSIONS_POLICY`` existe.
+
+    La cadena se copia tal cual en la cabecera. No pisa una cabecera que la
+    vista ya haya puesto.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.header = getattr(settings, "PERMISSIONS_POLICY", "")
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if self.header and "Permissions-Policy" not in response:
+            response["Permissions-Policy"] = self.header
+        return response
