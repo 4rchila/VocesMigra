@@ -92,6 +92,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.core.middleware.ContentSecurityPolicyMiddleware",
+    "apps.core.middleware.PermissionsPolicyMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -181,6 +182,8 @@ CONTENT_SECURITY_POLICY = {
     "form-action": ["'self'"],
     "frame-ancestors": ["'none'"],
 }
+# La app no usa cámara, micrófono ni ubicación; se niegan para todo el sitio.
+PERMISSIONS_POLICY = "camera=(), microphone=(), geolocation=()"
 
 # Logs sin correos, contraseñas ni IP completas (1.7). Django no registra
 # cuerpos de petición; el filtro recorta IP y correos que aparezcan en mensajes.

@@ -4,3 +4,8 @@ django-otp==1.7.5
 qrcode==8.2
 pycountry==26.2.16
 whitenoise==6.12.0
+# Dependencias transitivas fijadas también: así la instalación en Vercel no depende
+# del installCommand para resolver versiones (confirmar en el despliegue).
+asgiref==3.13.0
+sqlparse==0.6.0
+psycopg-binary==3.3.6

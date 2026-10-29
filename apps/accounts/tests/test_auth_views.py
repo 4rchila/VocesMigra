@@ -4,9 +4,12 @@ Las plantillas las aporta el worker de interfaz; estas pruebas verifican el
 contrato de nombres de plantilla y contexto sin cargar archivos de plantilla.
 """
 
+import smtplib
 from unittest import mock
 
 from django.conf import settings
+from django.core import mail
+from django.core.mail.backends.locmem import EmailBackend
 from django.http import HttpResponse
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -148,6 +151,62 @@ class RegistrationTests(TestCase):
 
     def test_rejects_unsupported_method(self):
         self.assertEqual(self.client.put(self.url).status_code, 405)
+
+
+MAIL_ERROR = "No pudimos enviar el correo de confirmación. Inténtalo de nuevo más tarde."
+
+
+class RegistrationMailFailureTests(TestCase):
+    url = reverse("accounts:register")
+
+    def post_with_failing_mail(self, data, error=None):
+        """Envía el formulario con el servidor de correo caído."""
+        error = error or smtplib.SMTPAuthenticationError(535, b"clave incorrecta")
+        with mock.patch.object(EmailBackend, "send_messages", side_effect=error):
+            return self.client.post(self.url, data)
+
+    def test_new_account_is_rolled_back_when_mail_fails(self):
+        with self.assertLogs("apps.accounts.views", level="ERROR") as logs:
+            response = self.post_with_failing_mail(registration_data())
+        self.assertEqual(response.status_code, 503)
+        self.assertContains(response, MAIL_ERROR, status_code=503)
+        self.assertFalse(User.objects.filter(email="nueva@example.com").exists())
+        self.assertEqual(User.objects.count(), 0)
+        self.assertIn("Fallo al enviar correo de registro", logs.output[0])
+        self.assertNotIn("nueva@example.com", "\n".join(logs.output))
+
+    def test_timeout_is_handled_like_smtp_failure(self):
+        response = self.post_with_failing_mail(registration_data(), TimeoutError("timeout"))
+        self.assertContains(response, MAIL_ERROR, status_code=503)
+        self.assertEqual(User.objects.count(), 0)
+
+    def test_existing_active_account_gets_same_error_when_notice_fails(self):
+        create_user(email="existente@example.com")
+        response = self.post_with_failing_mail(
+            registration_data(email="existente@example.com", alias="OtraCuenta")
+        )
+        self.assertContains(response, MAIL_ERROR, status_code=503)
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_existing_inactive_account_gets_same_error_when_resend_fails(self):
+        pending = create_user(email="pendiente@example.com")
+        pending.is_active = False
+        pending.save()
+        response = self.post_with_failing_mail(
+            registration_data(email="pendiente@example.com", alias="OtraCuenta")
+        )
+        self.assertContains(response, MAIL_ERROR, status_code=503)
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_success_creates_inactive_user_and_sends_one_mail(self):
+        response = self.client.post(self.url, registration_data())
+        self.assertRedirects(
+            response, reverse("accounts:register_done"), fetch_redirect_response=False
+        )
+        user = User.objects.get(email="nueva@example.com")
+        self.assertFalse(user.is_active)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["nueva@example.com"])
 
 
 class LoginTests(TestCase):
