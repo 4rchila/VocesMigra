@@ -99,7 +99,7 @@
             id="{{ field.id_for_label }}"
             name="{{ field.html_name }}"
             type="{{ field.widget_type|default:'text' }}"
-            value="{{ field.value|default_if_none:'' }}"
+            {% if field.widget_type != "password" %}value="{{ field.value|default_if_none:'' }}"{% endif %}
             {% if field.field.required %}required{% endif %}
             {% if field.help_text %}aria-describedby="{{ field.id_for_label }}_help"{% endif %}
             {% if field.errors %}aria-invalid="true" aria-describedby="{{ field.id_for_label }}_error"{% endif %}

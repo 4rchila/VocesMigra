@@ -5,7 +5,11 @@ ni el registro revelan si un correo tiene cuenta.
 """
 
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    BaseUserCreationForm,
+    SetPasswordForm,
+)
 from django.utils.translation import gettext_lazy as _
 
 from .models import User
@@ -18,6 +22,20 @@ def _style_fields(form):
         if name in form.errors:
             field.widget.attrs["aria-invalid"] = "true"
             field.widget.attrs["aria-describedby"] = f"id_{name}_error"
+
+
+def _ocultar_contrasenas(form, *nombres):
+    """Hace que los campos de contraseña nunca devuelvan su valor al HTML.
+
+    Mantiene los atributos del widget (autocomplete, etc.). La plantilla también
+    omite ``value`` en estos campos: ``BoundField.value()`` conserva el dato
+    enviado aunque el widget no lo pinte.
+    """
+    for nombre in nombres:
+        campo = form.fields[nombre]
+        campo.widget = forms.PasswordInput(
+            attrs=dict(campo.widget.attrs), render_value=False
+        )
 
 
 class RegistrationForm(BaseUserCreationForm):
@@ -42,6 +60,7 @@ class RegistrationForm(BaseUserCreationForm):
         super().__init__(*args, **kwargs)
         self.fields["email"].widget.attrs["autocomplete"] = "email"
         self.fields["alias"].widget.attrs["autocomplete"] = "username"
+        _ocultar_contrasenas(self, "password1", "password2")
         _style_fields(self)
 
     def clean_email(self):
@@ -82,10 +101,19 @@ class LoginForm(AuthenticationForm):
         self.fields["username"].widget = forms.EmailInput(
             attrs={"autofocus": True, "autocomplete": "email"}
         )
+        _ocultar_contrasenas(self, "password")
         _style_fields(self)
 
     def clean_username(self):
         return User.objects.normalize_email(self.cleaned_data["username"]).lower()
+
+
+class ActivationSetPasswordForm(SetPasswordForm):
+    """Contraseña elegida al activar la cuenta; no devuelve el valor al HTML."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _ocultar_contrasenas(self, "new_password1", "new_password2")
 
 
 class AliasChangeForm(forms.ModelForm):
