@@ -12,7 +12,6 @@ import smtplib
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.db import IntegrityError, transaction
@@ -28,7 +27,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from . import ratelimit
 from .emails import send_activation_email, send_existing_account_notice
-from .forms import AliasChangeForm, LoginForm, RegistrationForm
+from .forms import ActivationSetPasswordForm, AliasChangeForm, LoginForm, RegistrationForm
 from .models import User
 from .tokens import activation_token
 
@@ -157,7 +156,7 @@ def activate(request, uidb64, token):
     if not valid:
         return render(request, "accounts/activate.html", {"valid": False}, status=400)
     if request.method == "POST":
-        form = SetPasswordForm(user, request.POST)
+        form = ActivationSetPasswordForm(user, request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.is_active = True
@@ -165,7 +164,7 @@ def activate(request, uidb64, token):
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             return redirect(settings.LOGIN_REDIRECT_URL)
     else:
-        form = SetPasswordForm(user)
+        form = ActivationSetPasswordForm(user)
     return render(
         request, "accounts/activate.html", {"valid": True, "form": form, "account": user}
     )

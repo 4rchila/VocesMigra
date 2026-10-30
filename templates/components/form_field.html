@@ -33,7 +33,7 @@
     name="{{ name|default:id }}"
     type="{{ type|default:'text' }}"
     {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
-    {% if value %}value="{{ value }}"{% endif %}
+    {% if value and type != "password" %}value="{{ value }}"{% endif %}
     {% if required %}required{% endif %}
     {% if error %}aria-invalid="true" aria-describedby="{{ id }}_error"{% elif help_text %}aria-describedby="{{ id }}_help"{% endif %}
   >
