@@ -31,7 +31,7 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-responder@voces-migra
 # La ruta del admin es obligatoria en producción y no puede ser "admin/".
 ADMIN_URL = admin_url(env("DJANGO_ADMIN_URL", required=True))  # noqa: F405
 
-# Orígenes que pueden enviar formularios con CSRF, p. ej. https://vocesmigra.tech
+# Orígenes que pueden enviar formularios con CSRF, p. ej. https://vocesmigra.vercel.app
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")  # noqa: F405
 if any(not origin.startswith("https://") for origin in CSRF_TRUSTED_ORIGINS):
     raise ImproperlyConfigured("DJANGO_CSRF_TRUSTED_ORIGINS solo admite https://.")
@@ -72,7 +72,7 @@ SECURE_REDIRECT_EXEMPT = [r"^health/$"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 31536000
-# Sin includeSubDomains ni preload mientras el dominio .tech no sea definitivo:
+# Sin includeSubDomains ni preload porque producción vive en vocesmigra.vercel.app (subdominio de Vercel):
 # salir de la lista de preload de los navegadores tarda meses (SENTINEL).
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
