@@ -6,7 +6,7 @@ Además limita los intentos fallidos de acceso por IP.
 """
 
 from django.http import HttpResponse
-from django_otp.admin import OTPAdminSite
+from django_otp.admin import OTPAdminAuthenticationForm, OTPAdminSite
 
 from apps.accounts import ratelimit
 
@@ -14,6 +14,18 @@ from apps.accounts import ratelimit
 class VocesAdminSite(OTPAdminSite):
     site_header = "Voces Migra · Administración"
     site_title = "Voces Migra"
+    login_form = OTPAdminAuthenticationForm
+
+    def __init__(self, name="admin"):
+        # name="admin" para que reverse("admin:...") apunte a este sitio.
+        super().__init__(name)
+
+    def has_permission(self, request):
+        """Staff activo Y verificado por un dispositivo OTP."""
+        return bool(
+            super().has_permission(request)
+            and request.user.is_verified()
+        )
 
     def login(self, request, extra_context=None):
         if request.method == "POST":
