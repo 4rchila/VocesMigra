@@ -1,11 +1,11 @@
 <article class="card">
   <header class="card__header">
-    <h2 class="card__title">
-      <a class="card__title-link" href="{{ card_url|default:'#' }}">{{ title }}</a>
-    </h2>
     {% if category %}
     <span class="card__category">{{ category }}</span>
     {% endif %}
+    <h2 class="card__title">
+      <a class="card__title-link" href="{{ card_url|default:'#' }}">{{ title }}</a>
+    </h2>
   </header>
   {% if excerpt %}
   <p class="card__excerpt">{{ excerpt }}</p>

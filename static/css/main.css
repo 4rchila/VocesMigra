@@ -34,6 +34,9 @@
   --color-focus: var(--color-teal);
 
   --radius: 0.25rem;
+  --radius-lg: 0.75rem;
+  --shadow-sm: 0 1px 2px rgba(21, 50, 74, 0.06), 0 2px 8px rgba(21, 50, 74, 0.06);
+  --shadow-md: 0 2px 4px rgba(21, 50, 74, 0.08), 0 8px 24px rgba(21, 50, 74, 0.10);
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -329,17 +332,26 @@ button, input, select, textarea {
 }
 
 .card {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  padding: var(--space-md);
+  padding: var(--space-lg);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover,
+.card:focus-within {
+  box-shadow: var(--shadow-md);
 }
 
 .card__header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-sm);
   margin-bottom: var(--space-sm);
 }
@@ -363,14 +375,13 @@ button, input, select, textarea {
 
 .card__category {
   flex-shrink: 0;
-  padding: var(--space-xs) var(--space-sm);
+  padding: 0.125rem var(--space-sm);
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--color-text-on-dark);
-  background-color: var(--color-deep-blue);
-  border-radius: var(--radius);
+  letter-spacing: 0.02em;
+  color: var(--color-deep-blue);
+  background-color: var(--color-surface-muted);
+  border-radius: 999px;
 }
 
 .card__excerpt {
@@ -382,7 +393,7 @@ button, input, select, textarea {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs) var(--space-sm);
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-md);
   font-size: 0.875rem;
   color: var(--color-text-secondary);
 }
@@ -400,6 +411,7 @@ button, input, select, textarea {
 
 .card__footer {
   margin-top: auto;
+  padding-top: var(--space-sm);
 }
 
 /* Empty state */
@@ -408,14 +420,29 @@ button, input, select, textarea {
   text-align: center;
   background-color: var(--color-surface);
   border: 1px dashed var(--color-border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.empty-state__image {
+  width: calc(100% + 2 * var(--space-md));
+  max-width: none;
+  height: 9rem;
+  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-md)) var(--space-lg);
+  object-fit: cover;
 }
 
 .empty-state__icon {
   width: 3rem;
   height: 3rem;
+  margin-inline: auto;
   margin-bottom: var(--space-md);
   color: var(--color-text-secondary);
+}
+
+/* The photo already illustrates the state; hide the generic icon when present. */
+.empty-state__image + .empty-state__icon {
+  display: none;
 }
 
 .empty-state__title {
@@ -535,29 +562,118 @@ button, input, select, textarea {
 
 /* Hero */
 .hero {
-  padding: var(--space-xl) var(--space-md);
-  background-color: var(--color-surface);
-  border-block-end: 1px solid var(--color-border-subtle);
+  margin-block-start: calc(-1 * var(--space-xl));
+  padding: var(--space-xxl) 0;
+  color: var(--color-text-on-dark);
+  background-color: var(--color-deep-blue);
+  background-image:
+    linear-gradient(90deg, rgba(21, 50, 74, 0.92) 0%, rgba(21, 50, 74, 0.78) 100%),
+    var(--hero-image);
+  background-size: cover;
+  background-position: center;
 }
 
 .hero__title {
+  max-width: 22ch;
   margin-bottom: var(--space-md);
-  font-size: 1.75rem;
-  line-height: 1.25;
-  color: var(--color-deep-blue);
+  font-size: 1.875rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--color-text-on-dark);
 }
 
 .hero__description {
-  max-width: var(--reading-width);
+  max-width: 60ch;
   margin-bottom: var(--space-lg);
-  font-size: 1.125rem;
-  color: var(--color-text);
+  font-size: 1.0625rem;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .hero__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
+}
+
+.hero .button {
+  border-radius: 999px;
+  padding-inline: var(--space-lg);
+}
+
+.hero .button--primary {
+  color: var(--color-deep-blue);
+  background-color: #ffffff;
+  border-color: #ffffff;
+}
+
+.hero .button--primary:hover,
+.hero .button--primary:focus-visible {
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-surface-muted);
+}
+
+.hero .button--secondary {
+  color: var(--color-text-on-dark);
+  border-color: var(--color-text-on-dark);
+}
+
+.hero .button--secondary:hover,
+.hero .button--secondary:focus-visible {
+  color: var(--color-deep-blue);
+  background-color: #ffffff;
+  border-color: #ffffff;
+}
+
+.hero a:focus-visible {
+  outline-color: #ffffff;
+}
+
+/* Highlights */
+.highlights {
+  padding-block: var(--space-xl);
+}
+
+.highlight-list {
+  display: grid;
+  gap: var(--space-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.highlight {
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.highlight__image {
+  width: 100%;
+  height: 11rem;
+  object-fit: cover;
+}
+
+.highlight__body {
+  padding: var(--space-lg);
+}
+
+.highlight__title {
+  margin-bottom: var(--space-sm);
+  font-size: 1.25rem;
+  line-height: 1.3;
+  color: var(--color-deep-blue);
+}
+
+.highlight__text {
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+}
+
+.feed-section,
+.categories-section {
+  padding-block: var(--space-xl);
 }
 
 /* Section header */
@@ -879,7 +995,7 @@ button, input, select, textarea {
 /* 360px baseline: default styles above serve small screens directly. */
 @media (min-width: 360px) {
   .hero__title {
-    font-size: 2rem;
+    font-size: 2.125rem;
   }
 
   .post-header__title {
@@ -896,8 +1012,16 @@ button, input, select, textarea {
     flex-wrap: nowrap;
   }
 
+  .hero {
+    padding-block: 5rem;
+  }
+
   .hero__title {
-    font-size: 2.25rem;
+    font-size: 2.75rem;
+  }
+
+  .highlight-list {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .post-header__title {
@@ -920,7 +1044,7 @@ button, input, select, textarea {
   }
 
   .hero__title {
-    font-size: 2.5rem;
+    font-size: 3.25rem;
   }
 
   .post-header__title {
@@ -975,4 +1099,8 @@ button, input, select, textarea {
 
 .comment-form {
   margin-top: var(--space-lg);
+}
+
+@media (forced-colors: active) {
+  .hero { background-image: none; }
 }
