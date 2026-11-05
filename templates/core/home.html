@@ -4,7 +4,8 @@
 {% block title %}{% trans "Inicio" %} — Voces Migra{% endblock %}
 
 {% block content %}
-<section class="hero" aria-labelledby="hero-title" style="--hero-image: url('{% static 'img/hero-community.jpg' %}')">
+<section class="hero" aria-labelledby="hero-title">
+  <img class="hero__bg" src="{% static 'img/hero-community.jpg' %}" alt="" width="1600" height="900" decoding="async" fetchpriority="high">
   <div class="container hero__inner">
     <h1 id="hero-title" class="hero__title">{% trans "Información y apoyo para cada etapa del camino" %}</h1>
     <p class="hero__description">{% trans "Voces Migra es un espacio comunitario para compartir experiencias, solicitar orientación y consultar recursos útiles relacionados con procesos de migración." %}</p>

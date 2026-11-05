@@ -562,15 +562,39 @@ button, input, select, textarea {
 
 /* Hero */
 .hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   margin-block-start: calc(-1 * var(--space-xl));
   padding: var(--space-xxl) 0;
   color: var(--color-text-on-dark);
   background-color: var(--color-deep-blue);
-  background-image:
-    linear-gradient(90deg, rgba(21, 50, 74, 0.92) 0%, rgba(21, 50, 74, 0.78) 100%),
-    var(--hero-image);
-  background-size: cover;
-  background-position: center;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(90deg, rgba(21, 50, 74, 0.92) 0%, rgba(21, 50, 74, 0.78) 100%);
+  pointer-events: none;
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 2;
 }
 
 .hero__title {
@@ -650,9 +674,12 @@ button, input, select, textarea {
 }
 
 .highlight__image {
+  display: block;
   width: 100%;
   height: 11rem;
   object-fit: cover;
+  object-position: center;
+  background-color: var(--color-surface-muted);
 }
 
 .highlight__body {
@@ -1102,5 +1129,6 @@ button, input, select, textarea {
 }
 
 @media (forced-colors: active) {
-  .hero { background-image: none; }
+  .hero__bg { display: none; }
+  .hero::after { display: none; }
 }
