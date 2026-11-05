@@ -1,0 +1,58 @@
+{% load i18n %}
+<section id="votos" class="interactions-votes" aria-labelledby="votes-title">
+  <h2 id="votes-title" class="interactions__title">{% trans "¿Te resultó útil esta publicación?" %}</h2>
+  <p class="form-help">{% blocktrans %}Valoración de utilidad: {{ post_score }}{% endblocktrans %}</p>
+  {% if user.is_authenticated %}
+    {% url 'interactions:post_vote' post.public_id as vote_url %}
+    {% include "interactions/_vote_buttons.html" with action=vote_url current=post_vote %}
+    <p class="form-help">{% trans "Si eliges la misma opción otra vez, quitas tu voto." %}</p>
+  {% else %}
+    <p class="form-help"><a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">{% trans "Inicia sesión" %}</a> {% trans "para votar." %}</p>
+  {% endif %}
+</section>
+
+<section id="comentarios" class="interactions-comments" aria-labelledby="comments-title">
+  <h2 id="comments-title" class="interactions__title">{% trans "Comentarios" %}</h2>
+
+  {% if comments %}
+  <ul class="comment-list" role="list">
+    {% for comment in comments %}
+    <li id="comentario-{{ comment.pk }}" class="comment">
+      <p class="comment__meta">
+        <span class="comment__author">{{ comment.author }}</span>
+        <time datetime="{{ comment.created_at|date:'Y-m-d' }}">{{ comment.created_at|date:"j M Y" }}</time>
+      </p>
+      <div class="comment__body">{{ comment.content|linebreaksbr }}</div>
+      <p class="form-help">{% blocktrans with score=comment.score %}Valoración de utilidad: {{ score }}{% endblocktrans %}</p>
+      <div class="comment__actions">
+        {% if user.is_authenticated %}
+          {% url 'interactions:comment_vote' comment.pk as cvote_url %}
+          {% include "interactions/_vote_buttons.html" with action=cvote_url current=comment.my_vote %}
+          {% if comment.author_id == user.pk %}
+          <a class="button button--small button--secondary" href="{% url 'interactions:comment_update' comment.pk %}">{% trans "Editar" %}</a>
+          <a class="button button--small button--danger" href="{% url 'interactions:comment_delete' comment.pk %}">{% trans "Eliminar" %}</a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="form-help">{% trans "Aún no hay comentarios. Puedes escribir el primero con respeto y sin datos personales." %}</p>
+  {% endif %}
+
+  {% if user.is_authenticated %}
+  <form method="post" action="{% url 'interactions:comment_create' post.public_id %}" class="comment-form" novalidate>
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label" for="{{ comment_form.content.id_for_label }}">{{ comment_form.content.label }}</label>
+      {{ comment_form.content }}
+      <p class="form-help" id="id_content_help">{{ comment_form.content.help_text }}</p>
+      {% for error in comment_form.content.errors %}<p class="form-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <button class="button button--primary" type="submit">{% trans "Comentar" %}</button>
+  </form>
+  {% else %}
+  <p><a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">{% trans "Inicia sesión" %}</a> {% trans "para comentar." %}</p>
+  {% endif %}
+</section>

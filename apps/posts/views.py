@@ -13,6 +13,13 @@ from .models import Category, Post
 
 POSTS_PER_PAGE = 15
 CATEGORY_PARAM = "categoria"
+ORDER_PARAM = "orden"
+ORDER_RECENT = "reciente"
+ORDER_RELEVANCE = "relevancia"
+ORDERS = (
+    (ORDER_RECENT, "Recientes"),
+    (ORDER_RELEVANCE, "Más útiles"),
+)
 WRITE_METHODS = ["GET", "POST"]
 
 
@@ -22,14 +29,24 @@ def _selected_category(request):
     return requested if requested in Category.values else ""
 
 
+def _selected_order(request):
+    """Orden solicitado; cualquier valor desconocido cae en «reciente»."""
+    requested = request.GET.get(ORDER_PARAM, "").strip()
+    return requested if requested == ORDER_RELEVANCE else ORDER_RECENT
+
+
 @require_GET
 def post_list(request):
     """Feed público de publicaciones publicadas, con filtro y paginación."""
     selected_category = _selected_category(request)
 
+    selected_order = _selected_order(request)
+
     posts = Post.objects.published().select_related("author")
     if selected_category:
         posts = posts.filter(category=selected_category)
+    if selected_order == ORDER_RELEVANCE:
+        posts = posts.by_relevance()
 
     page_obj = Paginator(posts, POSTS_PER_PAGE).get_page(request.GET.get("page"))
 
@@ -38,6 +55,8 @@ def post_list(request):
         "page_obj": page_obj,
         "categories": Category.choices,
         "selected_category": selected_category,
+        "orders": ORDERS,
+        "selected_order": selected_order,
     }
     return render(request, "posts/post_list.html", context)
 

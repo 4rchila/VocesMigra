@@ -18,6 +18,21 @@
   </div>
 </section>
 
+<section class="categories-section" aria-labelledby="order-title">
+  <div class="container">
+    <h2 id="order-title" class="visually-hidden">{% trans "Ordenar publicaciones" %}</h2>
+    <nav class="category-nav" aria-label="{% trans 'Orden' %}">
+      <ul class="category-list" role="list">
+        {% for value, label in orders %}
+        <li class="category-list__item">
+          <a class="category-link{% if selected_order == value %} is-active{% endif %}" href="?{% if selected_category %}categoria={{ selected_category }}&{% endif %}orden={{ value }}"{% if selected_order == value %} aria-current="true"{% endif %}>{{ label }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+  </div>
+</section>
+
 <section aria-labelledby="results-title">
   <div class="container">
     <h2 id="results-title" class="visually-hidden">{% trans "Resultados" %}</h2>

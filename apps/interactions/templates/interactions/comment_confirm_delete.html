@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Eliminar comentario" %} — Voces Migra{% endblock %}
+
+{% block content %}
+<section class="delete-confirm" aria-labelledby="comment-delete-title">
+  <div class="container">
+    <h1 id="comment-delete-title">{% trans "Eliminar comentario" %}</h1>
+    <blockquote class="comment__body">{{ comment.content|linebreaksbr }}</blockquote>
+    <div class="notice notice--warning delete-confirm__warning" role="alert">
+      <p class="notice__text">{% trans "Esta acción no se puede deshacer." %}</p>
+    </div>
+    <form method="post" action="{% url 'interactions:comment_delete' comment.pk %}">
+      {% csrf_token %}
+      <div class="form-actions form-actions--spaced">
+        <button class="button button--danger" type="submit">{% trans "Eliminar comentario" %}</button>
+        <a class="button button--secondary" href="{{ comment.post.get_absolute_url }}#comentario-{{ comment.pk }}">{% trans "Cancelar y volver" %}</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

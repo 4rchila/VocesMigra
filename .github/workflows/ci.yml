@@ -29,7 +29,7 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python manage.py test tests apps.accounts.tests --verbosity 2
+        run: python manage.py test tests apps.accounts.tests apps.interactions.tests --verbosity 2
       - name: Migraciones sin cambios pendientes
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test

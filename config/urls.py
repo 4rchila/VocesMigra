@@ -13,5 +13,6 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     path("", include("apps.core.urls")),
     path("publicaciones/", include("apps.posts.urls")),
+    path("", include("apps.interactions.urls")),
     path("cuenta/", include("apps.accounts.urls")),
 ]

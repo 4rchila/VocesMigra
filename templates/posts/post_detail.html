@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n interactions_tags %}
 
 {% block title %}{{ post.title }} — Voces Migra{% endblock %}
 
@@ -30,4 +30,8 @@
     </footer>
   </div>
 </article>
+
+<div class="container">
+  {% interactions_section post %}
+</div>
 {% endblock %}
