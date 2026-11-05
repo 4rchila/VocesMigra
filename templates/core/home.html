@@ -1,17 +1,40 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{% trans "Inicio" %} — Voces Migra{% endblock %}
 
 {% block content %}
 <section class="hero" aria-labelledby="hero-title">
-  <div class="container">
-    <h1 id="hero-title">{% trans "Información y apoyo para cada etapa del camino" %}</h1>
+  <img class="hero__bg" src="{% static 'img/hero-community.jpg' %}" alt="" width="1600" height="900" decoding="async" fetchpriority="high">
+  <div class="container hero__inner">
+    <h1 id="hero-title" class="hero__title">{% trans "Información y apoyo para cada etapa del camino" %}</h1>
     <p class="hero__description">{% trans "Voces Migra es un espacio comunitario para compartir experiencias, solicitar orientación y consultar recursos útiles relacionados con procesos de migración." %}</p>
     <div class="hero__actions">
       <a class="button button--primary" href="{% url 'posts:list' %}">{% trans "Explorar publicaciones" %}</a>
       <a class="button button--secondary" href="{% url 'posts:create' %}">{% trans "Crear una publicación" %}</a>
     </div>
+  </div>
+</section>
+
+<section class="highlights" aria-labelledby="highlights-title">
+  <div class="container">
+    <h2 id="highlights-title" class="visually-hidden">{% trans "Cómo te acompañamos" %}</h2>
+    <ul class="highlight-list" role="list">
+      <li class="highlight">
+        <img class="highlight__image" src="{% static 'img/card-journey.jpg' %}" alt="" width="640" height="400" loading="eager" decoding="async">
+        <div class="highlight__body">
+          <h3 class="highlight__title">{% trans "Un camino con información clara" %}</h3>
+          <p class="highlight__text">{% trans "Consulta experiencias y recursos organizados por categoría para orientarte en cada etapa." %}</p>
+        </div>
+      </li>
+      <li class="highlight">
+        <img class="highlight__image" src="{% static 'img/card-support.jpg' %}" alt="" width="640" height="400" loading="eager" decoding="async">
+        <div class="highlight__body">
+          <h3 class="highlight__title">{% trans "Apoyo de la comunidad" %}</h3>
+          <p class="highlight__text">{% trans "Pregunta, comparte y responde con respeto. Nadie tiene que recorrer el camino solo." %}</p>
+        </div>
+      </li>
+    </ul>
   </div>
 </section>
 

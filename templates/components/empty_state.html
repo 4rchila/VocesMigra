@@ -1,5 +1,6 @@
-{% load i18n %}
+{% load i18n static %}
 <div class="empty-state">
+  <img class="empty-state__image" src="{% static 'img/empty-horizon.jpg' %}" alt="" width="640" height="240" loading="lazy" decoding="async">
   <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
     <circle cx="12" cy="12" r="10"></circle>
     <line x1="8" y1="12" x2="16" y2="12"></line>
