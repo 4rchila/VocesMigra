@@ -3,9 +3,13 @@
   <h2 id="votes-title" class="interactions__title">{% trans "¿Te resultó útil esta publicación?" %}</h2>
   <p class="form-help">{% blocktrans %}Valoración de utilidad: {{ post_score }}{% endblocktrans %}</p>
   {% if user.is_authenticated %}
+    {% if user.pk == post.author_id %}
+    <p class="form-help">{% trans "No puedes valorar tu propia publicación." %}</p>
+    {% else %}
     {% url 'interactions:post_vote' post.public_id as vote_url %}
     {% include "interactions/_vote_buttons.html" with action=vote_url current=post_vote %}
     <p class="form-help">{% trans "Si eliges la misma opción otra vez, quitas tu voto." %}</p>
+    {% endif %}
   {% else %}
     <p class="form-help"><a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">{% trans "Inicia sesión" %}</a> {% trans "para votar." %}</p>
   {% endif %}
@@ -26,8 +30,10 @@
       <p class="form-help">{% blocktrans with score=comment.score %}Valoración de utilidad: {{ score }}{% endblocktrans %}</p>
       <div class="comment__actions">
         {% if user.is_authenticated %}
+          {% if comment.author_id != user.pk %}
           {% url 'interactions:comment_vote' comment.pk as cvote_url %}
           {% include "interactions/_vote_buttons.html" with action=cvote_url current=comment.my_vote %}
+          {% endif %}
           {% if comment.author_id == user.pk %}
           <a class="button button--small button--secondary" href="{% url 'interactions:comment_update' comment.pk %}">{% trans "Editar" %}</a>
           <a class="button button--small button--danger" href="{% url 'interactions:comment_delete' comment.pk %}">{% trans "Eliminar" %}</a>

@@ -1,6 +1,6 @@
 """Reglas de voto: crear, cambiar o revocar con una transacción explícita."""
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 
 def cast_vote(model, owner_field, owner, user, value):
@@ -10,14 +10,19 @@ def cast_vote(model, owner_field, owner, user, value):
     - Mismo valor otra vez: se revoca (devuelve ``None``).
     - Valor opuesto: se cambia.
     Nunca hay más de una fila por (elemento, persona): lo garantiza además la
-    UniqueConstraint de la base de datos.
+    UniqueConstraint de la base de datos. Un doble POST concurrente cae en
+    IntegrityError, se relee la fila y se aplica la misma lógica.
     """
     lookup = {owner_field: owner, "user": user}
     with transaction.atomic():
         vote = model.objects.select_for_update().filter(**lookup).first()
         if vote is None:
-            model.objects.create(value=value, **lookup)
-            return value
+            try:
+                with transaction.atomic():
+                    model.objects.create(value=value, **lookup)
+                return value
+            except IntegrityError:
+                vote = model.objects.select_for_update().get(**lookup)
         if vote.value == value:
             vote.delete()
             return None

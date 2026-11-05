@@ -349,3 +349,80 @@ class RlsMigrationTests(TestCase):
             self.assertIn(
                 f"ALTER TABLE {model._meta.db_table} ENABLE ROW LEVEL SECURITY", sql
             )
+
+
+class ReviewFollowUpTests(Base):
+    """Correcciones VERITY/SENTINEL sobre 7a4f14f."""
+
+    def test_cast_vote_integrity_error_rereads_and_applies(self):
+        from unittest.mock import patch
+        from django.db.models.query import QuerySet
+        from apps.interactions.services import cast_vote
+
+        Vote.objects.create(post=self.post, user=self.other, value=1)
+        original_first = QuerySet.first
+        forced = {"once": True}
+
+        def first_none_once(self):
+            if self.model is Vote and forced["once"]:
+                forced["once"] = False
+                return None
+            return original_first(self)
+
+        with (
+            patch.object(QuerySet, "first", first_none_once),
+            patch.object(Vote.objects, "create", side_effect=IntegrityError("duplicate")),
+        ):
+            # Misma valoración que la fila concurrente → revoca.
+            result = cast_vote(Vote, "post", self.post, self.other, 1)
+        self.assertIsNone(result)
+        self.assertEqual(Vote.objects.count(), 0)
+
+        Vote.objects.create(post=self.post, user=self.other, value=1)
+        forced["once"] = True
+        with (
+            patch.object(QuerySet, "first", first_none_once),
+            patch.object(Vote.objects, "create", side_effect=IntegrityError("duplicate")),
+        ):
+            result = cast_vote(Vote, "post", self.post, self.other, -1)
+        self.assertEqual(result, -1)
+        self.assertEqual(Vote.objects.get().value, -1)
+
+
+    def test_invalid_comment_400_keeps_post_detail_context(self):
+        self.login(self.other)
+        r = self.client.post(self.comment_url(), {"content": "   "})
+        self.assertEqual(r.status_code, 400)
+        self.assertTemplateUsed(r, "posts/post_detail.html")
+        self.assertEqual(r.context["post"], self.post)
+        self.assertContains(r, self.post.title, status_code=400)
+        self.assertContains(r, "comentarios", status_code=400)
+        self.assertTrue(r.context["comment_form"].errors)
+
+    def test_cannot_edit_or_delete_comment_on_draft_post(self):
+        draft = make_post(self.author, "Borrador con comentario válido", status=Status.DRAFT)
+        c = Comment.objects.create(post=draft, author=self.author, content="oculto")
+        self.login(self.author)
+        edit = reverse("interactions:comment_update", args=[c.pk])
+        delete = reverse("interactions:comment_delete", args=[c.pk])
+        self.assertEqual(self.client.get(edit).status_code, 404)
+        self.assertEqual(self.client.post(edit, {"content": "no"}).status_code, 404)
+        self.assertEqual(self.client.post(delete).status_code, 404)
+        self.assertTrue(Comment.objects.filter(pk=c.pk).exists())
+
+    def test_cannot_vote_own_post_or_comment(self):
+        self.login(self.author)
+        self.assertEqual(self.client.post(self.vote_url(), {"value": 1}).status_code, 302)
+        self.assertEqual(Vote.objects.count(), 0)
+        c = Comment.objects.create(post=self.post, author=self.author, content="mío")
+        url = reverse("interactions:comment_vote", args=[c.pk])
+        self.assertEqual(self.client.post(url, {"value": 1}).status_code, 302)
+        self.assertEqual(CommentVote.objects.count(), 0)
+        # Otra persona sí puede.
+        self.login(self.other)
+        self.client.post(self.vote_url(), {"value": 1})
+        self.client.post(url, {"value": 1})
+        self.assertEqual(Vote.objects.count(), 1)
+        self.assertEqual(CommentVote.objects.count(), 1)
+
+
