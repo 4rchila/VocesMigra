@@ -11,7 +11,7 @@
 | App Django (funciones Python) | Vercel Hobby, uso no comercial |
 | Base de datos PostgreSQL | Supabase |
 | Correo SMTP | Brevo (`smtp-relay.brevo.com:587`, TLS obligatorio) |
-| Dominio | `.tech` del GitHub Student Developer Pack (D7), gratis el primer año |
+| Dominio | `vocesmigra.vercel.app`, dominio de Vercel (D7: se descartó el dominio `.tech`) |
 
 Vercel no tiene disco permanente ni procesos que queden encendidos. Por eso las migraciones corren en el build, y los archivos subidos tendrán que ir a Supabase Storage (eso es trabajo de la Fase 2, todavía no está hecho).
 
@@ -20,7 +20,6 @@ Vercel no tiene disco permanente ni procesos que queden encendidos. Por eso las 
 - Cuenta de Vercel conectada al repositorio de GitHub.
 - Proyecto de Supabase con los datos de conexión a PostgreSQL.
 - Cuenta de Brevo con una clave SMTP.
-- Dominio `.tech` activado, con 2FA en la cuenta del registrador.
 - La Fase 1 subida a GitHub (el push lo apruebas tú).
 
 ## 3. Archivos que usa Vercel
@@ -39,15 +38,15 @@ Configúralas en Vercel, dentro de *Settings → Environment Variables* del proy
 |---|---|---|
 | `DJANGO_SETTINGS_MODULE` | Production | `config.settings.production` **[verificar** dónde lo toma la app en Vercel**]** |
 | `DJANGO_SECRET_KEY` | **Solo Production** | Clave larga y aleatoria. Si una vista previa necesita una, usa otra distinta (SENTINEL) |
-| `DJANGO_ALLOWED_HOSTS` | Production | `tu-dominio.tech` y el dominio `.vercel.app` del proyecto |
-| `DJANGO_CSRF_TRUSTED_ORIGINS` | Production | `https://tu-dominio.tech` (solo acepta `https://`) |
+| `DJANGO_ALLOWED_HOSTS` | Production | `vocesmigra.vercel.app` |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Production | `https://vocesmigra.vercel.app` (solo acepta `https://`) |
 | `DJANGO_ADMIN_URL` | Production | Ruta secreta del admin; no puede ser `admin` |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT` | **Solo Production** | Datos de Supabase |
 | `POSTGRES_SSLMODE` | Production | `require` |
 | `EMAIL_HOST` | Production | `smtp-relay.brevo.com` |
 | `EMAIL_PORT` | Production | `587` |
 | `EMAIL_USER`, `EMAIL_PASSWORD` | **Solo Production** | Credenciales SMTP de Brevo |
-| `DEFAULT_FROM_EMAIL` | Production | Remitente del dominio `.tech` |
+| `DEFAULT_FROM_EMAIL` | Production | Remitente verificado en Brevo |
 
 `CLIENT_IP_HEADER` y `TRUSTED_PROXY_COUNT` ya tienen valores por defecto para Vercel en `production.py` (`HTTP_X_VERCEL_FORWARDED_FOR` y `1`). No hace falta definirlas.
 
@@ -66,7 +65,7 @@ En la configuración de *Deployment Protection* del proyecto, activa la protecci
 5. Crea el superusuario y el primer acceso al admin desde tu PC, apuntando a Supabase (ver el README: `createsuperuser` y `addstatictoken`). Después entra a la ruta de `DJANGO_ADMIN_URL` y registra tu dispositivo TOTP.
 
 ### Resultado esperado
-- `https://tu-dominio.tech/health/` responde 200.
+- `https://vocesmigra.vercel.app/health/` responde 200.
 - `/admin/` responde 404, y la ruta secreta pide contraseña y código TOTP.
 - El registro manda el correo de activación por Brevo.
 
@@ -79,11 +78,11 @@ Estas no se pudieron probar sin un despliegue real (FORGE y VERITY):
 
 ## 8. Dominio y correo
 
-1. Agrega el dominio `.tech` al proyecto en Vercel y crea los registros DNS que te indique.
-2. En Brevo, autentica el dominio con **SPF** y **DKIM**.
-3. Agrega un registro **DMARC** con `p=quarantine`.
-4. Anota la fecha de vencimiento del dominio y pásasela a MALENIA para el aviso de renovación.
-5. **No actives HSTS preload** ni `includeSubDomains` mientras el dominio no sea definitivo.
+El único dominio de producción es `vocesmigra.vercel.app`, el que asigna Vercel; no hay dominio propio (D7, se descartó el `.tech`).
+
+1. En Brevo, usa un remitente verificado para `DEFAULT_FROM_EMAIL`.
+2. Si en el futuro se agrega un dominio propio: añádelo al proyecto en Vercel, crea los registros DNS, autentícalo en Brevo con **SPF** y **DKIM**, agrega **DMARC** con `p=quarantine` y anota su fecha de vencimiento.
+3. **No actives HSTS preload** ni `includeSubDomains` mientras el dominio no sea definitivo.
 
 ## 9. Tareas periódicas (diaria, a mano)
 
