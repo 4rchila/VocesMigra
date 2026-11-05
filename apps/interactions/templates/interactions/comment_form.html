@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Editar comentario" %} — Voces Migra{% endblock %}
+
+{% block content %}
+<section aria-labelledby="comment-edit-title">
+  <div class="container">
+    <h1 id="comment-edit-title">{% trans "Editar comentario" %}</h1>
+    <form method="post" action="{% url 'interactions:comment_update' comment.pk %}" novalidate>
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="{{ form.content.id_for_label }}">{{ form.content.label }}</label>
+        {{ form.content }}
+        <p class="form-help">{{ form.content.help_text }}</p>
+        {% for error in form.content.errors %}<p class="form-error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+      <div class="form-actions">
+        <button class="button button--primary" type="submit">{% trans "Guardar cambios" %}</button>
+        <a class="button button--secondary" href="{{ comment.post.get_absolute_url }}#comentario-{{ comment.pk }}">{% trans "Cancelar" %}</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

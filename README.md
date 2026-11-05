@@ -10,7 +10,7 @@ Monolito Django 5.2 con plantillas renderizadas en servidor, SQLite en desarroll
 |---|---|
 | Aplicación | Django 5.2 desplegado en Vercel Hobby: <https://vocesmigra.vercel.app> |
 | Base de datos | PostgreSQL de Supabase (conexión con `POSTGRES_SSLMODE`) |
-| Row Level Security (RLS) en Supabase | Activo en las 16 tablas del esquema `public`, sin políticas y sin `FORCE`. Se activó directamente en Supabase (no hay migración en el repositorio). Bloquea el acceso por la API pública de Supabase; Django no se ve afectado porque se conecta con el rol `postgres`, que tiene `BYPASSRLS`. El aviso `rls_disabled_in_public` del advisor quedó resuelto |
+| Row Level Security (RLS) en Supabase | Activo en las 16 tablas del esquema `public`, sin políticas y sin `FORCE`. Las 16 tablas previas se activaron directamente en Supabase; las tablas de `interactions` lo activan en su propia migración (`interactions/0001_initial`, solo PostgreSQL). Bloquea el acceso por la API pública de Supabase; Django no se ve afectado porque se conecta con el rol `postgres`, que tiene `BYPASSRLS`. El aviso `rls_disabled_in_public` del advisor quedó resuelto |
 | Correo | SMTP de Brevo (registro y activación de cuentas) |
 | Administración | Ruta secreta configurable con `DJANGO_ADMIN_URL` (`/admin/` da 404) y 2FA TOTP con `django-otp` |
 | Dominio | Solo `vocesmigra.vercel.app`; se descartó el dominio `.tech` (D7) |

@@ -1,0 +1,7 @@
+{% load i18n %}
+{# Espera: action, current (valor del voto de la persona o None), label_up/label_down #}
+<form method="post" action="{{ action }}" class="vote-form">
+  {% csrf_token %}
+  <button class="button button--small button--secondary{% if current == 1 %} is-active{% endif %}" type="submit" name="value" value="1"{% if current == 1 %} aria-pressed="true"{% else %} aria-pressed="false"{% endif %}>{% trans "Útil" %}</button>
+  <button class="button button--small button--secondary{% if current == -1 %} is-active{% endif %}" type="submit" name="value" value="-1"{% if current == -1 %} aria-pressed="true"{% else %} aria-pressed="false"{% endif %}>{% trans "No útil" %}</button>
+</form>

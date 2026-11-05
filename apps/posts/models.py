@@ -2,8 +2,10 @@
 
 Una publicación pertenece a una persona autora y a una única categoría del
 catálogo cerrado. El identificador público es un UUID distinto de la clave
-primaria para no exponer el conteo interno. No se implementan imágenes,
-comentarios, votos, guardados, seguidores, búsqueda ni moderación.
+primaria para no exponer el conteo interno. Los comentarios planos y los votos
+viven en ``apps.interactions`` (que depende de este módulo, no al revés). Este
+módulo solo conoce la relación inversa ``votes`` para ordenar por relevancia.
+No se implementan imágenes, guardados, seguidores, búsqueda ni moderación.
 """
 
 import uuid
@@ -11,6 +13,8 @@ import uuid
 from django.conf import settings
 from django.core.validators import MaxLengthValidator, MinLengthValidator
 from django.db import models
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -45,6 +49,17 @@ class PostQuerySet(models.QuerySet):
     def published(self):
         """Publicaciones visibles en el feed público."""
         return self.filter(status=Status.PUBLISHED)
+
+    def with_score(self):
+        """Anota ``score``: suma de votos (+1/-1) o 0 si no hay votos.
+
+        Usa la relación inversa ``votes`` definida por ``apps.interactions``.
+        """
+        return self.annotate(score=Coalesce(Sum("votes__value"), 0))
+
+    def by_relevance(self):
+        """Orden determinista: puntaje desc, fecha desc, id desc."""
+        return self.with_score().order_by("-score", "-created_at", "-id")
 
     def visible_to(self, user):
         """Publicaciones publicadas, más los borradores de la propia persona."""

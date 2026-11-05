@@ -33,7 +33,7 @@ class PostModelTests(TestCase):
         self.author = create_user()
 
     def test_only_expected_fields_are_stored(self):
-        field_names = {field.name for field in Post._meta.get_fields()}
+        field_names = {field.name for field in Post._meta.concrete_fields}
         self.assertEqual(
             field_names,
             {
